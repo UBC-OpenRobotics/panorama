@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 ROOT_DIR=$(dirname "$(realpath "$0")")/..
+export QT_QPA_PLATFORM=offscreen
+
 BUILD_DIR="$ROOT_DIR/build"
 
 if [[ ! -d "$BUILD_DIR" ]]; then
