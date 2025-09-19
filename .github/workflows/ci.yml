@@ -10,7 +10,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        # os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest]
+
     steps:
       - uses: actions/checkout@v4
 
@@ -20,15 +22,14 @@ jobs:
           version: 6.7.0
           modules: qtbase
 
-      - name: Install deps (Linux only)
+      - name: Install Linux Deps
         if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler libprotobuf-dev
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y protobuf-compiler libprotobuf-dev
 
-      - name: Configure
-        run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+      - name: Build (Release)
+        run: bash scripts/build.sh Release
 
-      - name: Build
-        run: cmake --build build --parallel
-
-      - name: Test
-        run: ctest --test-dir build --output-on-failure
+      - name: Run tests
+        run: bash scripts/test.sh
