@@ -20,7 +20,7 @@ jobs:
         uses: jurplel/install-qt-action@v3
         with:
           version: 6.7.0
-          modules: qtbase
+          cache: true
 
       - name: Install Linux Deps
         if: matrix.os == 'ubuntu-latest'
