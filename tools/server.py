@@ -3,19 +3,6 @@ import time        # For controlling how often data is sent
 import random      # To generate random “fake” data values
 
 
-def generate_cluster(size=5):
-    """
-    Generate a list (cluster) of random floating-point numbers.
-    This represents one "packet" of raw data coming from the ESB.
-
-    Parameters:
-        size (int): how many numbers are in each data cluster.
-                    For example, size=5 might mean 5 sensor readings.
-
-    Returns:
-        list[float]: random numbers between 0 and 100, rounded to 2 decimals.
-    """
-    return [round(random.uniform(0, 100), 2) for _ in range(size)]
 
 
 def start_mock_esb(host="127.0.0.1", port=5000, interval=1):
@@ -50,13 +37,11 @@ def start_mock_esb(host="127.0.0.1", port=5000, interval=1):
         with conn:
             try:
                 while True:
-                    # Generate a random cluster of fake numeric data
-                    cluster = generate_cluster()
 
                     # Convert the list [12.3, 45.6, 78.9] → "12.3 45.6 78.9\n"
                     # The newline ('\n') is important — it tells the receiver
                     # where one message ends and the next begins.
-                    message = " ".join(map(str, cluster)) + "\n"
+                    message = "Hello world!\n"
 
                     # Send the bytes over the network to the connected client
                     conn.sendall(message.encode("utf-8"))
