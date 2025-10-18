@@ -14,13 +14,13 @@ def noisy_data(start_val, end_val, num_points, noise_standard_deviation):
 
 time, true_signal, noisy_graph = noisy_data(0, 50, 100, 2)
 
-plt.figure(figsize = (12,6))
+# plt.figure(figsize = (12,6))
 
-plt.scatter(time, noisy_graph, label = 'Noisy Measurements', alpha = 0.6, s = 15, color = 'gray')
+# plt.scatter(time, noisy_graph, label = 'Noisy Measurements', alpha = 0.6, s = 15, color = 'gray')
 
-plt.title('Noisy Data - to be denoised')
-plt.xlabel('Time Step ($k$)')
-plt.ylabel('Value')
-plt.legend()
-plt.grid(True)
-plt.show() 
+# plt.title('Noisy Data - to be denoised')
+# plt.xlabel('Time Step ($k$)')
+# plt.ylabel('Value')
+# plt.legend()
+# plt.grid(True)
+# plt.show() 
