@@ -3,7 +3,13 @@ name: CI
 on:
   push:
     branches: [ main, dev ]
+    paths-ignore:
+      - 'tools/**'
+      - '.github/workflows/tools-*.yml'
   pull_request:
+    paths-ignore:
+      - 'tools/**'
+      - '.github/workflows/tools-*.yml'
 
 jobs:
   build:
