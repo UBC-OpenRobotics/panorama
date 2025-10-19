@@ -38,4 +38,4 @@ jobs:
         run: bash scripts/build.sh Release
 
       - name: Run tests
-        run: bash scripts/test.sh
+        run: bash scripts/runtests.sh
