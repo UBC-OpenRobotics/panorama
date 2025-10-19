@@ -4,7 +4,7 @@ ROOT_DIR=$(dirname "$(realpath "$BASH_SOURCE")")/..
 BUILD_DIR="$ROOT_DIR/build"
 SCRIPTS_DIR="$ROOT_DIR/scripts"
 
-chmod +x $SCRIPTS_DIR/test.sh $SCRIPTS_DIR/build.sh $SCRIPTS_DIR/run.sh $SCRIPTS_DIR/clean.sh
+chmod +x $SCRIPTS_DIR/runtests.sh $SCRIPTS_DIR/build.sh $SCRIPTS_DIR/run.sh $SCRIPTS_DIR/clean.sh
 
 build() {
     local BUILD_TYPE=${1:-Debug}
@@ -39,7 +39,7 @@ clean() {
     echo "env.sh: [INFO] Clean complete!"
 }
 
-test() {
+ctest() {
     echo "env.sh: [INFO] Running tests..."
-    "$ROOT_DIR/scripts/test.sh"
+    "$ROOT_DIR/scripts/runtests.sh"
 }

@@ -10,6 +10,6 @@ if [[ ! -d "$BUILD_DIR" ]]; then
     "$ROOT_DIR/scripts/build.sh" Release
 fi
 
-echo "test.sh [INFO] Running tests with CTest..."
+echo "runtests.sh [INFO] Running tests with CTest..."
 cd "$BUILD_DIR"
 ctest --output-on-failure --verbose
