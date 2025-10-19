@@ -39,7 +39,7 @@ clean() {
     echo "env.sh: [INFO] Clean complete!"
 }
 
-ctest() {
+runtests() {
     echo "env.sh: [INFO] Running tests..."
     "$ROOT_DIR/scripts/runtests.sh"
 }
