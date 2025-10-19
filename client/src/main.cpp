@@ -1,19 +1,32 @@
-#include <QApplication>
-#include "client/mainwindow.hpp"
+#include <wx/wx.h>
+#include <wx/timer.h>
+#include "client/mainframe.hpp"
 #include "client/argparser.hpp"
-#include <QTimer>
 
-int main(int argc, char *argv[]) {
-    QApplication app(argc, argv);
+class PanoramaClient : public wxApp {
+public:
+    virtual bool OnInit() override {
+        
+        ArgParser parser(argc, argv); // Parse command line arguments (wxApp provides argc and argv as members)
+        
+        MainFrame* w = new MainFrame("Panorama Client");
+        w->Show();
+        
+        // If test mode, quit after 3 seconds
+        if (parser.isTestMode()) {
+            wxTimer* timer = new wxTimer(this);
+            
+            Bind(wxEVT_TIMER, [this, timer](wxTimerEvent&) {
 
-    ArgParser parser(app.arguments());
+                timer->Stop();
 
-    MainWindow w;
-    w.show();
-
-    if (parser.isTestMode()) {
-        QTimer::singleShot(3000, &app, &QCoreApplication::quit);
+                wxTheApp->ExitMainLoop(); 
+            });
+            timer->StartOnce(3000);
+        }
+        
+        return true;
     }
+};
 
-    return app.exec();
-}
+wxIMPLEMENT_APP(PanoramaClient);

@@ -1,9 +1,14 @@
 #include "client/argparser.hpp"
+#include "wx/cmdline.h"
 
-ArgParser::ArgParser(const QStringList& args)
+ArgParser::ArgParser(int argc, char** argv)
     : testMode_(false)
 {
-    testMode_ = args.contains("--test");
+    wxCmdLineParser parser(argc, argv);
+    parser.AddSwitch("test", "test", "test mode");
+    parser.Parse(false); // don't exit on errors
+
+    testMode_ = parser.Found("test");
 }
 
 bool ArgParser::isTestMode() const {

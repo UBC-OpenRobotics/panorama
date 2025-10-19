@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/panorama-client.dir/src/main.cpp.o CMakeFiles/panorama-client.dir/src/mainframe.cpp.o CMakeFiles/panorama-client.dir/src/argparser.cpp.o -o panorama-client 

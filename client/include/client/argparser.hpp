@@ -1,9 +1,8 @@
 #pragma once
-#include <QStringList>
 
 class ArgParser {
 public:
-    ArgParser(const QStringList& args);
+    ArgParser(int argc, char** argv);
 
     bool isTestMode() const;
 
