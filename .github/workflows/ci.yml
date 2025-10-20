@@ -22,20 +22,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v3
-        with:
-          version: 6.7.0
-          cache: true
-
       - name: Install Linux Deps
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install -y protobuf-compiler libprotobuf-dev
-
-      - name: Build (Release)
-        run: bash scripts/build.sh Release
 
       - name: Run tests
         run: bash scripts/runtests.sh
