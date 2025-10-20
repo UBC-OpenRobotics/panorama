@@ -2,6 +2,7 @@
 build/
 tags
 Testing/
-make
+Makefile
 CMakeFiles/
 client/CMakeFiles/
+client/Makefile
