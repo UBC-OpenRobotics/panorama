@@ -2,7 +2,9 @@
 
 BUILD_TYPE=${1:-Debug}
 
-ROOT_DIR=$(dirname "$(realpath "$0")")/..
+SCRIPT_DIR=$(dirname "$(realpath "$0")")
+ROOT_DIR=$(realpath "$SCRIPT_DIR/..")
+
 BUILD_DIR="$ROOT_DIR/build"
 
 echo "build.sh: [INFO] Configuring project ($BUILD_TYPE)..."

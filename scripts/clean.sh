@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-ROOT_DIR=$(dirname "$(realpath "$0")")/..
+SCRIPT_DIR=$(dirname "$(realpath "$0")")
+ROOT_DIR=$(realpath "$SCRIPT_DIR/..")
 BUILD_DIR="$ROOT_DIR/build"
 
 echo "clean.sh: [INFO] Removing build directory..."
