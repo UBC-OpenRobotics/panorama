@@ -91,36 +91,23 @@ elseif(APPLE)
 
     message(STATUS "Using wxWidgets prebuilt from ${WXWIDGETS_PREBUILT_PATH}")
 else()
-    # Linux static libraries
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
-    
-    target_link_libraries(wxWidgets::wxWidgets INTERFACE
-        "${wxWidgets_LIB_DIR}/${WXWIDGETS_LIB_PREFIX}wx_gtk3u-3.3${WXWIDGETS_LIB_SUFFIX}"
-        "${wxWidgets_LIB_DIR}/${WXWIDGETS_LIB_PREFIX}wx_gtk3u_gl-3.3${WXWIDGETS_LIB_SUFFIX}"
-        "${wxWidgets_LIB_DIR}/${WXWIDGETS_LIB_PREFIX}wxlexilla-3.3${WXWIDGETS_LIB_SUFFIX}"
-        "${wxWidgets_LIB_DIR}/${WXWIDGETS_LIB_PREFIX}wxscintilla-3.3${WXWIDGETS_LIB_SUFFIX}"
 
+    execute_process(
+        COMMAND ${wxWidgets_CONFIG_EXECUTABLE} --cxxflags
+        OUTPUT_VARIABLE WX_CXX_FLAGS
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    execute_process(
+        COMMAND ${wxWidgets_CONFIG_EXECUTABLE} --libs
+        OUTPUT_VARIABLE WX_LINK_FLAGS
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
 
-        # "${wxWidgets_LIB_DIR}/${WXWIDGETS_LIB_PREFIX}wxregexu-3.3${WXWIDGETS_LIB_SUFFIX}"
-        # "${wxWidgets_LIB_DIR}/${WXWIDGETS_LIB_PREFIX}wxexpat-3.3${WXWIDGETS_LIB_SUFFIX}"
-        # "${wxWidgets_LIB_DIR}/${WXWIDGETS_LIB_PREFIX}wxtiff-3.3${WXWIDGETS_LIB_SUFFIX}"
-        # "${wxWidgets_LIB_DIR}/${WXWIDGETS_LIB_PREFIX}wxjpeg-3.3${WXWIDGETS_LIB_SUFFIX}"
-        # "${wxWidgets_LIB_DIR}/${WXWIDGETS_LIB_PREFIX}wxpng-3.3${WXWIDGETS_LIB_SUFFIX}"
-        # "${wxWidgets_LIB_DIR}/${WXWIDGETS_LIB_PREFIX}wxzlib-3.3${WXWIDGETS_LIB_SUFFIX}"
-        ${GTK3_LIBRARIES}
-        pthread
-        dl
-        m
-    )
-    target_include_directories(wxWidgets::wxWidgets INTERFACE
-        ${GTK3_INCLUDE_DIRS}
-    )
-    target_compile_definitions(wxWidgets::wxWidgets INTERFACE
-        __WXGTK__
-        __WXGTK3__
-        WXUSINGDLL=0
-    )
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WX_CXX_FLAGS}")
+    set(WX_LIBRARIES "${WX_LINK_FLAGS}")
+    target_link_libraries(panorama-client "${WX_LIBRARIES}")
+
+    message(STATUS "Using wxWidgets prebuilt from ${WXWIDGETS_PREBUILT_PATH}")
 endif()
 
 if(MSVC)
