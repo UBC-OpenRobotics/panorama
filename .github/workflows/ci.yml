@@ -1,22 +1,41 @@
 name: CI
 
 on:
-  push:
-    branches: [ main, dev ]
-    paths-ignore:
-      - 'tools/**'
-      - '.github/workflows/tools-*.yml'
   pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened, edited]
     paths-ignore:
       - 'tools/**'
       - '.github/workflows/tools-*.yml'
 
 jobs:
+  skip-wip:
+    if: |
+      github.event_name == 'pull_request' && 
+      startsWith(github.event.pull_request.title, 'WIP')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comment why CI skipped
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            const issue_number = pr.number;
+            const body = "CI skipped: This pull request is marked as **WIP**. Remove 'WIP' from the title to trigger a merge.";
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number,
+              body
+            });
+
   build:
+    if: |
+      github.event_name != 'pull_request' || 
+      !startsWith(github.event.pull_request.title, 'WIP')
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # os: [ubuntu-latest, windows-latest, macos-latest]
         os: [ubuntu-latest]
 
     steps:
