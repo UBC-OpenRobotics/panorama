@@ -14,7 +14,14 @@
 int main() {
     std::cout << "[TEST] Launching panorama-client..." << std::endl;
 
+#if defined(_WIN32)
+    const char* exePath = "../client/panorama-client.exe";
+#elif defined(__APPLE__)
+    const char* exePath = "../client/panorama-client.app/Contents/MacOS/panorama-client";
+#else
     const char* exePath = "../client/panorama-client";
+#endif
+
     const char* arg = "--test";
 
 #if defined(_WIN32)

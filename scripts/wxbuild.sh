@@ -104,51 +104,70 @@ build_windows() {
     echo "Windows build complete!"
 }
 
-# Function to build for macOS (requires macOS or cross-compile setup)
-build_macos_cross() {
-    echo "Setting up macOS cross-compilation for ARM64..."
-    
-    # This requires osxcross to be set up
-    # See: https://github.com/tpoechtrager/osxcross
+build_macos() {
+    echo "Building wxWidgets for macOS ARM64..."
     
     BUILD_MACOS="${BUILD_DIR}/build-macos-arm64"
     OUTPUT_MACOS="${OUTPUT_BASE}/macos-arm64"
     
+    rm -rf "${BUILD_MACOS}"
+    mkdir -p "${BUILD_MACOS}"
     mkdir -p "${OUTPUT_MACOS}"
     
-    cat > "${OUTPUT_MACOS}/README.md" << EOF
-# macOS ARM64 Build
-
-To build wxWidgets for macOS ARM64, you need to either:
-
-1. Build on an actual Mac with Apple Silicon, or
-2. Set up osxcross for cross-compilation
-
-## Building on macOS:
-
-\`\`\`bash
-cd wxWidgets-${WXWIDGETS_VERSION}
-mkdir build-mac
-cd build-mac
-
-../configure \\
-    --prefix=/path/to/output \\
-    --enable-unicode \\
-    --disable-shared \\
-    --enable-monolithic \\
-    --with-osx_cocoa \\
-    --with-macosx-version-min=11.0 \\
-    --enable-universal_binary=arm64 \\
-    --disable-debug \\
-    --enable-optimise
-
-make -j\$(sysctl -n hw.ncpu)
-make install
-\`\`\`
+    cd "${BUILD_MACOS}"
+    
+    ARCH=$(uname -m)
+    if [ "$ARCH" = "arm64" ]; then
+        echo "Building for native ARM64..."
+        ARCH_FLAGS="--enable-macosx_arch=arm64"
+    else
+        echo "Building universal binary for ARM64 on Intel Mac..."
+        ARCH_FLAGS="--enable-universal_binary=arm64,x86_64"
+    fi
+    
+    "${WXWIDGETS_SRC}/configure" \
+        --prefix="${OUTPUT_MACOS}" \
+        --disable-shared \
+        --enable-monolithic \
+        --with-osx_cocoa \
+        --with-macosx-version-min=11.0 \
+        ${ARCH_FLAGS} \
+        --enable-webview \
+        --with-opengl \
+        --enable-graphics_ctx \
+        --disable-debug \
+        --enable-optimise \
+        --disable-sys-libs \
+        --with-libjpeg=builtin \
+        --with-libpng=builtin \
+        --with-libtiff=builtin \
+        --with-zlib=builtin \
+        --with-expat=builtin \
+        CXXFLAGS="-std=c++11" \
+        CFLAGS="-fPIC" \
+        CPPFLAGS="-fPIC" \
+        OBJCXXFLAGS="-std=c++11"
+    
+    make -j$(sysctl -n hw.ncpu)
+    make install
+    
+    cat > "${OUTPUT_MACOS}/wx-config" << 'EOF'
+#!/bin/bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec "${SCRIPT_DIR}/bin/wx-config" "$@"
+EOF
+    chmod +x "${OUTPUT_MACOS}/wx-config"
+    
+    cat > "${OUTPUT_MACOS}/build_info.txt" << EOF
+wxWidgets ${WXWIDGETS_VERSION} for macOS ARM64
+Built on: $(date)
+Architecture: ${ARCH}
+Min macOS version: 11.0
+Configuration: Static, Monolithic, Optimized
 EOF
     
-    echo "macOS build instructions written to ${OUTPUT_MACOS}/README.md"
-    echo "Note: macOS build requires actual Mac hardware or osxcross setup"
+    echo "macOS ARM64 build complete!"
+    echo "Binaries installed to: ${OUTPUT_MACOS}"
 }
 
 # Parse command line arguments
@@ -157,16 +176,16 @@ if [ "$1" == "linux" ]; then
 elif [ "$1" == "windows" ]; then
     build_windows
 elif [ "$1" == "macos" ]; then
-    build_macos_cross
+    build_macos
 elif [ "$1" == "all" ]; then
     build_linux
     build_windows
-    build_macos_cross
+    build_macos
 else
     echo "Usage: $0 [linux|windows|macos|all]"
     echo "  linux   - Build for Linux x64"
     echo "  windows - Build for Windows x64 (cross-compile)"
-    echo "  macos   - Generate macOS build instructions"
+    echo "  macos   - Build for macOS"
     echo "  all     - Build all platforms"
     exit 1
 fi
