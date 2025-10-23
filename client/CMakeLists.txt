@@ -29,50 +29,92 @@ target_include_directories(panorama-client
 # wxWidgets Configuration
 if(WIN32)
     set(WXWIDGETS_PREBUILT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/wxwidgets-prebuilt/windows-x64")
-    set(WXWIDGETS_LIB_PREFIX "lib")
-    set(WXWIDGETS_LIB_SUFFIX ".a")
 elseif(APPLE)
     set(WXWIDGETS_PREBUILT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/wxwidgets-prebuilt/macos-arm64")
-    set(WXWIDGETS_LIB_PREFIX "lib")
-    set(WXWIDGETS_LIB_SUFFIX ".a")
 else()
     set(WXWIDGETS_PREBUILT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/wxwidgets-prebuilt/linux-x64")
-    set(WXWIDGETS_LIB_PREFIX "lib")
-    set(WXWIDGETS_LIB_SUFFIX ".a")
 endif()
 
 set(wxWidgets_ROOT_DIR "${WXWIDGETS_PREBUILT_PATH}")
 set(wxWidgets_LIB_DIR "${WXWIDGETS_PREBUILT_PATH}/lib")
 set(wxWidgets_INCLUDE_DIR "${WXWIDGETS_PREBUILT_PATH}/include/wx-3.3")
 
-set(wxWidgets_CONFIG_EXECUTABLE "${WXWIDGETS_PREBUILT_PATH}/bin/wx-config")
-
-if(NOT EXISTS "${wxWidgets_CONFIG_EXECUTABLE}")
-    message(FATAL_ERROR "wx-config not found at ${wxWidgets_CONFIG_EXECUTABLE}")
-endif()
-
-
 if(WIN32)
-    # Windows static libraries
-    target_link_libraries(wxWidgets::wxWidgets INTERFACE
-        "${wxWidgets_LIB_DIR}/${WXWIDGETS_LIB_PREFIX}wx_mswu-3.3${WXWIDGETS_LIB_SUFFIX}"
-        "${wxWidgets_LIB_DIR}/${WXWIDGETS_LIB_PREFIX}wxregexu-3.3${WXWIDGETS_LIB_SUFFIX}"
-        "${wxWidgets_LIB_DIR}/${WXWIDGETS_LIB_PREFIX}wxexpat-3.3${WXWIDGETS_LIB_SUFFIX}"
-        "${wxWidgets_LIB_DIR}/${WXWIDGETS_LIB_PREFIX}wxtiff-3.3${WXWIDGETS_LIB_SUFFIX}"
-        "${wxWidgets_LIB_DIR}/${WXWIDGETS_LIB_PREFIX}wxjpeg-3.3${WXWIDGETS_LIB_SUFFIX}"
-        "${wxWidgets_LIB_DIR}/${WXWIDGETS_LIB_PREFIX}wxpng-3.3${WXWIDGETS_LIB_SUFFIX}"
-        "${wxWidgets_LIB_DIR}/${WXWIDGETS_LIB_PREFIX}wxzlib-3.3${WXWIDGETS_LIB_SUFFIX}"
-        # Windows system libraries
-        kernel32 user32 gdi32 comdlg32 winspool winmm shell32 shlwapi comctl32 ole32 
-        oleaut32 uuid rpcrt4 advapi32 version ws2_32 wininet oleacc uxtheme
-    )
-    target_compile_definitions(wxWidgets::wxWidgets INTERFACE
-        __WXMSW__
-        WXUSINGDLL=0
-        _UNICODE
-        UNICODE
-    )
+    # Detect if using MinGW or MSVC
+    if(MINGW)
+        message(STATUS "Configuring for MinGW build")
+        
+        target_include_directories(panorama-client PRIVATE 
+            "${wxWidgets_INCLUDE_DIR}"
+            "${WXWIDGETS_PREBUILT_PATH}/lib/wx/include/x86_64-w64-mingw32-msw-unicode-static-3.3"
+        )
+        
+        target_link_libraries(panorama-client PRIVATE
+            "${wxWidgets_LIB_DIR}/libwx_mswu-3.3-x86_64-w64-mingw32.a"
+            "${wxWidgets_LIB_DIR}/libwxregexu-3.3-x86_64-w64-mingw32.a"
+            "${wxWidgets_LIB_DIR}/libwxexpat-3.3-x86_64-w64-mingw32.a"
+            "${wxWidgets_LIB_DIR}/libwxtiff-3.3-x86_64-w64-mingw32.a"
+            "${wxWidgets_LIB_DIR}/libwxjpeg-3.3-x86_64-w64-mingw32.a"
+            "${wxWidgets_LIB_DIR}/libwxpng-3.3-x86_64-w64-mingw32.a"
+            "${wxWidgets_LIB_DIR}/libwxzlib-3.3-x86_64-w64-mingw32.a"
+            # Windows system libraries
+            -lkernel32 -luser32 -lgdi32 -lcomdlg32 -lwinspool -lwinmm -lshell32 
+            -lshlwapi -lcomctl32 -lole32 -loleaut32 -luuid -lrpcrt4 -ladvapi32 
+            -lversion -lws2_32 -lwininet -loleacc -luxtheme
+        )
+        
+        target_compile_definitions(panorama-client PRIVATE
+            __WXMSW__
+            WXUSINGDLL=0
+            _UNICODE
+            UNICODE
+        )
+        
+    elseif(MSVC)
+        message(STATUS "Configuring for MSVC build")
+        
+        target_include_directories(panorama-client PRIVATE 
+            "${wxWidgets_INCLUDE_DIR}"
+            "${WXWIDGETS_PREBUILT_PATH}/lib/mswu"
+        )
+        
+        # Find all wxWidgets libraries in the lib directory
+        file(GLOB WX_LIBS "${wxWidgets_LIB_DIR}/wx*.lib")
+        
+        if(NOT WX_LIBS)
+            message(FATAL_ERROR "No wxWidgets libraries found in ${wxWidgets_LIB_DIR}")
+        endif()
+        
+        message(STATUS "Found wxWidgets libraries:")
+        foreach(lib ${WX_LIBS})
+            get_filename_component(lib_name ${lib} NAME)
+            message(STATUS "  ${lib_name}")
+        endforeach()
+        
+        target_link_libraries(panorama-client PRIVATE
+            ${WX_LIBS}
+            # Windows system libraries
+            kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib 
+            shell32.lib shlwapi.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib 
+            rpcrt4.lib advapi32.lib version.lib ws2_32.lib wininet.lib oleacc.lib 
+            uxtheme.lib gdiplus.lib
+        )
+        
+        target_compile_definitions(panorama-client PRIVATE
+            __WXMSW__
+            _UNICODE
+            UNICODE
+        )
+    endif()
+
+    message(STATUS "Using wxWidgets prebuilt from ${WXWIDGETS_PREBUILT_PATH}")
+    
 elseif(APPLE)
+    set(wxWidgets_CONFIG_EXECUTABLE "${WXWIDGETS_PREBUILT_PATH}/bin/wx-config")
+    
+    if(NOT EXISTS "${wxWidgets_CONFIG_EXECUTABLE}")
+        message(FATAL_ERROR "wx-config not found at ${wxWidgets_CONFIG_EXECUTABLE}")
+    endif()
 
     execute_process(
         COMMAND ${wxWidgets_CONFIG_EXECUTABLE} --cxxflags
@@ -91,6 +133,11 @@ elseif(APPLE)
 
     message(STATUS "Using wxWidgets prebuilt from ${WXWIDGETS_PREBUILT_PATH}")
 else()
+    set(wxWidgets_CONFIG_EXECUTABLE "${WXWIDGETS_PREBUILT_PATH}/bin/wx-config")
+    
+    if(NOT EXISTS "${wxWidgets_CONFIG_EXECUTABLE}")
+        message(FATAL_ERROR "wx-config not found at ${wxWidgets_CONFIG_EXECUTABLE}")
+    endif()
 
     execute_process(
         COMMAND ${wxWidgets_CONFIG_EXECUTABLE} --cxxflags
@@ -112,7 +159,6 @@ endif()
 
 if(MSVC)
     target_compile_options(panorama-client PRIVATE /W4)
-    # target_compile_definitions(panorama-client PRIVATE _CRT_SECURE_NO_WARNINGS)
 else()
     target_compile_options(panorama-client PRIVATE -Wall -Wextra -Wpedantic)
 endif()
