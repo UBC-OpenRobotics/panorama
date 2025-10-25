@@ -8,6 +8,7 @@
 
 // ALEX WAS HERE!!!!!
 
+// Hello nami here 
 class PanoramaClient : public wxApp {
 public:
     virtual bool OnInit() override {
