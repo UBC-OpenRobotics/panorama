@@ -14,7 +14,8 @@
 // da fdsf 
 // ad fsda 
 
-// Hello Alex was here FIRST!!!!! I DONT CARE!!!!!
+// Hello Nami was here firstFIRST!!!!! I DONT CARE!!!!!
+// ALEX HERE
 class PanoramaClient : public wxApp {
 public:
     virtual bool OnInit() override {
