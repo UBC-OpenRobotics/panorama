@@ -4,11 +4,15 @@ set(CLIENT_SOURCES
     src/main.cpp
     src/mainframe.cpp
     src/argparser.cpp
+    src/message_model.cpp
+    src/tcp_client.cpp
 )
 
 set(CLIENT_HEADERS
     include/client/mainframe.hpp
     include/client/argparser.hpp
+    include/client/message_model.hpp
+    include/client/tcp_client.hpp
 )
 
 # Executable settings
@@ -24,6 +28,10 @@ endif()
 target_include_directories(panorama-client
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
+
+if(WIN32)
+    target_link_libraries(panorama-client PRIVATE ws2_32)
+endif()
 
 
 # wxWidgets Configuration
