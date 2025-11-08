@@ -140,11 +140,14 @@ elseif(APPLE)
     target_link_libraries(panorama-client "${WX_LIBRARIES}")
 
     message(STATUS "Using wxWidgets prebuilt from ${WXWIDGETS_PREBUILT_PATH}")
-else()
-    set(wxWidgets_CONFIG_EXECUTABLE "${WXWIDGETS_PREBUILT_PATH}/bin/wx-config")
-    
+else() # linux
+	
+
+	find_program(wxWidgets_CONFIG_EXECUTABLE wx-config)
+    #set(wxWidgets_CONFIG_EXECUTABLE "${WXWIDGETS_PREBUILT_PATH}/bin/wx-config")
+ 
     if(NOT EXISTS "${wxWidgets_CONFIG_EXECUTABLE}")
-        message(FATAL_ERROR "wx-config not found at ${wxWidgets_CONFIG_EXECUTABLE}")
+        message(FATAL_ERROR "wx-config not found.")
     endif()
 
     execute_process(
@@ -162,7 +165,7 @@ else()
     set(WX_LIBRARIES "${WX_LINK_FLAGS}")
     target_link_libraries(panorama-client "${WX_LIBRARIES}")
 
-    message(STATUS "Using wxWidgets prebuilt from ${WXWIDGETS_PREBUILT_PATH}")
+    message(STATUS "Using locally built wxWidgets via wx-config: ${wxWidgets_CONFIG_EXECUTABLE}")
 endif()
 
 if(MSVC)
