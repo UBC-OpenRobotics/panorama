@@ -36,7 +36,7 @@ endif()
 
 # wxWidgets Configuration
 if(WIN32)
-    set(WXWIDGETS_PREBUILT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/wxwidgets-prebuilt/windows-x64")
+    set(WXWIDGETS_PREBUILT_PATH "$ENV{WXWIN}")
 elseif(APPLE)
     set(WXWIDGETS_PREBUILT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/wxwidgets-prebuilt/macos-arm64")
 else()
@@ -45,7 +45,7 @@ endif()
 
 set(wxWidgets_ROOT_DIR "${WXWIDGETS_PREBUILT_PATH}")
 set(wxWidgets_LIB_DIR "${WXWIDGETS_PREBUILT_PATH}/lib")
-set(wxWidgets_INCLUDE_DIR "${WXWIDGETS_PREBUILT_PATH}/include/wx-3.3")
+set(wxWidgets_INCLUDE_DIR "${WXWIDGETS_PREBUILT_PATH}/include")
 
 if(WIN32)
     # Detect if using MinGW or MSVC
@@ -83,11 +83,11 @@ if(WIN32)
         
         target_include_directories(panorama-client PRIVATE 
             "${wxWidgets_INCLUDE_DIR}"
-            "${WXWIDGETS_PREBUILT_PATH}/lib/mswu"
+            "${wxWidgets_LIB_DIR}/vc_x64_lib/mswu"
         )
         
         # Find all wxWidgets libraries in the lib directory
-        file(GLOB WX_LIBS "${wxWidgets_LIB_DIR}/wx*.lib")
+        file(GLOB WX_LIBS "${wxWidgets_LIB_DIR}/vc_x64_lib/wx*.lib")
         
         if(NOT WX_LIBS)
             message(FATAL_ERROR "No wxWidgets libraries found in ${wxWidgets_LIB_DIR}")
