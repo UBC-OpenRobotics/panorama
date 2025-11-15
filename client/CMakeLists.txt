@@ -17,7 +17,7 @@ set(CLIENT_HEADERS
 
 # Executable settings
 if(WIN32)
-    add_executable(panorama-client WIN32 ${CLIENT_SOURCES} ${CLIENT_HEADERS})
+    add_executable(panorama-client WIN32 ${CLIENT_SOURCES} ${CLIENT_HEADERS} "include/client/CheckBoxPanel.h" "src/checkboxpanel.cpp")
 elseif(APPLE)
     add_executable(panorama-client MACOSX_BUNDLE ${CLIENT_SOURCES} ${CLIENT_HEADERS})
 else()
