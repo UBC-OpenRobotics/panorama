@@ -1,5 +1,0 @@
-wxWidgets 3.3.1 for macOS ARM64
-Built on: Sun 19 Oct 2025 17:52:45 PDT
-Architecture: arm64
-Min macOS version: 11.0
-Configuration: Static, Monolithic, Optimized
