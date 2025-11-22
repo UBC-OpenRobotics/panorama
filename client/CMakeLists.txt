@@ -6,13 +6,16 @@ set(CLIENT_SOURCES
     src/argparser.cpp
     src/message_model.cpp
     src/tcp_client.cpp
+    src/json_reader.cpp
 )
 
 set(CLIENT_HEADERS
+    include/client/panorama_defines.hpp
     include/client/mainframe.hpp
     include/client/argparser.hpp
     include/client/message_model.hpp
     include/client/tcp_client.hpp
+    include/client/json_reader.hpp
 )
 
 # Executable settings

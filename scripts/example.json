@@ -1,0 +1,7 @@
+{
+    "cats": [
+        {"type": "Bernese", "age": 10, "color": "black"},
+        {"type": "Calico", "age": 2, "color": "orange"},
+        {"type": "Mountain", "age": 4, "color": "grey"}
+    ]
+}

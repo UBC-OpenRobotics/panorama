@@ -1,6 +1,7 @@
 import socket      # Built-in module for network communication (TCP/IP)
 import time        # For controlling how often data is sent
 import random      # To generate random “fake” data valuesgit 
+import json
 
 def generate_cluster(size=5):
     """
@@ -17,7 +18,7 @@ def generate_cluster(size=5):
     return [round(random.uniform(0, 100), 2) for _ in range(size)]
 
 
-def start_mock_esb(host="127.0.0.1", port=5000, interval=1):
+def start_mock_esb(host="127.0.0.1", port=3000, interval=1):
     """
     Start a fake ESB (Enterprise Service Bus) server that continuously sends
     clusters of fake data to any client (like your future C++ program).
@@ -54,8 +55,9 @@ def start_mock_esb(host="127.0.0.1", port=5000, interval=1):
 
                     # Convert the list [12.3, 45.6, 78.9] → "12.3 45.6 78.9\n"
                     # The newline ('\n') is important — it tells the receiver
-                    # where one message ends  and the next begins.
-                    message = " ".join(map(str, cluster)) + "\n"
+                    # where one message ends and the next begins.
+                    with open("tools/example.json", "r") as f: 
+                        message = json.dumps(json.load(f))
 
                     # Send the bytes over the network to the connected client
                     conn.sendall(message.encode("utf-8"))
