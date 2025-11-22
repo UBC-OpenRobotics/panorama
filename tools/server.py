@@ -54,7 +54,7 @@ def start_mock_esb(host="127.0.0.1", port=5000, interval=1):
 
                     # Convert the list [12.3, 45.6, 78.9] → "12.3 45.6 78.9\n"
                     # The newline ('\n') is important — it tells the receiver
-                    # where one message ends and the next begins.
+                    # where one message ends  and the next begins.
                     message = " ".join(map(str, cluster)) + "\n"
 
                     # Send the bytes over the network to the connected client
