@@ -1,7 +1,4 @@
 {
-    "cats": [
-        {"type": "Bernese", "age": 10, "color": "black"},
-        {"type": "Calico", "age": 2, "color": "orange"},
-        {"type": "Mountain", "age": 4, "color": "grey"}
-    ]
+    "a": 1.122332,
+    "b": 6.7786445
 }
