@@ -1,4 +1,4 @@
-struct {
+typedef struct {
     char a;
     float a_data;
     char b;

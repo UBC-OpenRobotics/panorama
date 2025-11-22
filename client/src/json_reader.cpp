@@ -32,3 +32,7 @@ bool JsonReader::parse() {
 const rapidjson::Document& JsonReader::getDocument() const {
     return document_;
 }
+
+buffer_data_t JsonReader::exportToBuffer() {
+    
+}
