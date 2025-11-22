@@ -10,6 +10,7 @@ set(CLIENT_SOURCES
 )
 
 set(CLIENT_HEADERS
+    include/client/panorama_defines.hpp
     include/client/mainframe.hpp
     include/client/argparser.hpp
     include/client/message_model.hpp
