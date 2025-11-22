@@ -9,44 +9,67 @@ public:
     DataBuffer();
     ~DataBuffer();
 
-    // ---- Writing ----
-    // Append raw JSON data received from server into buffer
+    // ---------------------------
+    //       BUFFER HANDLING
+    // ---------------------------
+
+    // Append new raw JSON data received from server
     void writeData(const std::string& jsonChunk);
 
-    // Optionally overwrite buffer with fresh data
+    // Replace buffer entirely with fresh raw JSON
     void setData(const std::string& jsonData);
 
-    // ---- Reading ----
-    // Retrieve all raw data currently stored
+    // Return the entire buffer content (without clearing)
     std::string readAll() const;
 
-    // Retrieve and clear buffer (useful for message-by-message processing)
+    // Return and clear the buffer (consume)
     std::string consume();
 
-    // ---- Processing (Optional) ----
-    // Extract one "complete JSON object" and leave remaining partial data behind
-    // e.g., useful if server streams multiple JSON objects back-to-back
-    std::string extractNextJson();
-
-    // Check if buffer currently contains a full JSON object
+    // Does the buffer currently contain a complete JSON object?
     bool hasCompleteJson() const;
 
-    // ---- Buffer State ----
-    // Clear the buffer fully
-    void clear();
-
-    // Return current buffer size in bytes
+    // Return buffer size in bytes
     size_t size() const;
 
+    // Clear the buffer
+    void clear();
+
+    // Extract the next complete JSON object from buffer
+    // Removes extracted portion from buffer
+    std::string extractNextJson();
+
+
+    // ---------------------------
+    //        JSON PARSING
+    // ---------------------------
+
+    // Parse the next complete JSON object in the buffer.
+    // Returns success/failure depending on whether parsing succeeded.
+    // The parsed result can be returned as a variant, struct, or any user-defined type.
+    bool parseNextJson(/* ParsedData &out */);
+
+    // Parse *all* complete JSON objects currently in the buffer.
+    // Useful if the buffer contains multiple messages.
+    void parseAll(/* std::vector<ParsedData> &out */);
+
 private:
-    // Internal raw data buffer (stores JSON text)
+    // Raw buffer storing incoming data
     std::string buffer_;
 
-    // Optional mutex for thread safety
-    // mutable std::mutex bufferMutex_;
+    // ---------------------------
+    //      JSON HELPER LOGIC
+    // ---------------------------
 
-    // Helper to detect boundaries of JSON objects
-    // e.g., match braces or newline-delimited messages
+    // Find end of next valid JSON object inside buffer
+    // E.g., matching braces or newline delimiter depending on protocol
     size_t findJsonBoundary() const;
-};
 
+    // Validate that a substring is a valid JSON object
+    // Useful to avoid partial or corrupted parsing attempts
+    bool isValidJson(const std::string& jsonStr) const;
+
+    // Convert a JSON string into structured data (using a library of your choice)
+    // Example: convert jsonStr → ParsedData type
+    // This keeps parsing logic isolated from buffer logic
+    bool decodeJson(const std::string& jsonStr /*, ParsedData &out */);
+};
