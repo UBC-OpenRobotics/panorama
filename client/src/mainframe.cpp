@@ -1,81 +1,85 @@
 #include "client/mainframe.hpp"
 #include "client/message_model.hpp"
-#include "client/CheckBoxPanel.h"
+// #include "client/graph_panel.hpp"
+// #include "client/sensor_data_frame.hpp"
+#include "client/sensor_manager.hpp"
+#include <wx/dcbuffer.h>
+#include <wx/sizer.h>
 
 MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
     const wxPoint& pos, const wxSize& size)
     : wxFrame(nullptr, wxID_ANY, title, pos, size), model_(model) {
+    
+    // Create splitter for layout
+    wxSplitterWindow* mainSplitter = new wxSplitterWindow(this, wxID_ANY);
+    wxSplitterWindow* topSplitter = new wxSplitterWindow(mainSplitter, wxID_ANY);
+    wxSplitterWindow* rightSplitter = new wxSplitterWindow(topSplitter, wxID_ANY);
 
-    // Create text control for displaying messages
-    messageDisplay_ = new wxTextCtrl(this, wxID_ANY, "",
-        wxDefaultPosition, wxDefaultSize,
-        wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP);
+    // Create the four main panels
+    // Sensor manager panel
+    SensorManagerPanel* sensorPanel = new SensorManagerPanel(topSplitter);
 
-    /*
-    wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
-    sizer->Add(messageDisplay_, 1, wxEXPAND | wxALL, 5);
-    SetSizer(sizer);
-    */
+    // Data view area
+    wxPanel* dataViewPanel = new wxPanel(rightSplitter);
+    dataViewPanel->SetBackgroundColour(wxColour(200, 200, 200));
+    wxStaticText* dataViewLabel = new wxStaticText(dataViewPanel, wxID_ANY, "DATA VIEW AREA",
+        wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER);
+    wxBoxSizer* dataViewSizer = new wxBoxSizer(wxVERTICAL);
+    dataViewSizer->AddStretchSpacer();
+    dataViewSizer->Add(dataViewLabel, 0, wxALIGN_CENTER);
+    dataViewSizer->AddStretchSpacer();
+    dataViewPanel->SetSizer(dataViewSizer);
+
+    // Graph panel area
+    wxPanel* graphPanel = new wxPanel(rightSplitter);
+    graphPanel->SetBackgroundColour(wxColour(180, 180, 180));
+    wxStaticText* graphLabel = new wxStaticText(graphPanel, wxID_ANY, "GRAPH PANEL AREA",
+        wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER);
+    wxBoxSizer* graphSizer = new wxBoxSizer(wxVERTICAL);
+    graphSizer->AddStretchSpacer();
+    graphSizer->Add(graphLabel, 0, wxALIGN_CENTER);
+    graphSizer->AddStretchSpacer();
+    graphPanel->SetSizer(graphSizer);
+
+
+    // Create text control for displaying messages (Console)
+    wxPanel* consolePanel = new wxPanel(mainSplitter);
+    wxBoxSizer* consoleSizer = new wxBoxSizer(wxVERTICAL);
+    messageDisplay_ = new wxTextCtrl(consolePanel, wxID_ANY, "",
+                                     wxDefaultPosition, wxDefaultSize,
+                                     wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP);
+    messageDisplay_->SetBackgroundColour(wxColour(40, 40, 40));
+    messageDisplay_->SetForegroundColour(wxColour(255, 255, 255));
+
+    wxStaticText* consoleLabel = new wxStaticText(consolePanel, wxID_ANY, "Console");
+
+    consoleSizer->Add(consoleLabel, 0, wxALL, 5);
+    consoleSizer->Add(messageDisplay_, 1, wxEXPAND | wxALL, 5);
+    consolePanel->SetSizer(consoleSizer);
+
+    // Assemble splitters
+    rightSplitter->SplitHorizontally(dataViewPanel, graphPanel, 200);
+    rightSplitter->SetMinimumPaneSize(100);
+
+    topSplitter->SplitVertically(sensorPanel, rightSplitter, 200);
+    topSplitter->SetMinimumPaneSize(100);
+
+    int windowHeight = size.GetHeight();
+    int consoleHeight = 150; // fixed height
+    mainSplitter->SplitHorizontally(topSplitter, consolePanel, -150);
+    mainSplitter->SetMinimumPaneSize(50);
+
+    // Layout
+    wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
+    mainSizer->Add(mainSplitter, 1, wxEXPAND);
+    SetSizer(mainSizer);
+
 
     // Register as observer
     model_->addObserver([this]() {
         // Use CallAfter to update GUI from non-GUI thread
         CallAfter(&MainFrame::updateMessageDisplay);
-        });
-
-    //added button
-    //wxButton* button = new wxButton(messageDisplay_, wxID_ANY, "button", wxPoint(50, 100), wxSize(100, 35));
-
-    wxArrayString sensors;
-    sensors.Add("All");
-    sensors.Add("Sensor 1");
-    sensors.Add("Sensor 2");
-    sensors.Add("Sensor 3");
-
-    auto* checkboxPanel = new CheckBoxPanel(this, sensors);
-
-    //left sidebar
-    wxPanel* sidebar = new wxPanel(this, wxID_ANY);
-    sidebar->SetBackgroundColour(*wxLIGHT_GREY);
-    wxBoxSizer* sidebarSizer = new wxBoxSizer(wxVERTICAL);
-    sidebarSizer->Add(checkboxPanel, 1, wxEXPAND | wxALL, 10);
-
-    sidebarSizer->Add(new wxButton(sidebar, wxID_ANY, "Feature 1"), 0, wxALL, 5);
-    sidebarSizer->Add(new wxButton(sidebar, wxID_ANY, "Feature 2"), 0, wxALL, 5);
-
-    sidebar->SetSizer(sidebarSizer);
-
-    // Main content area
-    //wxPanel* content = new wxPanel(this, wxID_ANY);
-    //content->SetBackgroundColour(*wxWHITE);
-    wxBoxSizer* mainSizer = new wxBoxSizer(wxHORIZONTAL);
-
-    mainSizer->Add(sidebar, 0, wxALIGN_BOTTOM | wxALL, 5);
-    mainSizer->Add(checkboxPanel, 1, wxALIGN_CENTRE | wxALL, 5);
-    mainSizer->Add(messageDisplay_, 3, wxEXPAND | wxALL, 5);
-    SetSizer(mainSizer);
-
-    /*
-    //NEW STUFF
-    wxArrayString sensors;
-    sensors.Add("All");
-    sensors.Add("Sensor 1");
-    sensors.Add("Sensor 2");
-    sensors.Add("Sensor 3");
-
-    auto* checkboxPanel = new CheckBoxPanel(this, sensors);
-
-    mainSizer->Add(checkboxPanel, 1, wxALIGN_TOP | wxALL, 10);
-    SetSizer(mainSizer);
-    */
-
-    //BuildCheckboxes(sensors);
-
-    //wxChoice* sensor = new wxChoice(messageDisplay_, wxID_ANY, wxPoint(150, 200), wxSize(100, -1), sensors);
-
-    //wxCheckBox* checkBox = new wxCheckBox(messageDisplay_, wxID_ANY, "sensor 1", wxPoint(200, 50));
-
-    //checkBox->Bind(wxEVT_CHECKBOX, &MainFrame::OnCheckBoxClicked, this);
+    });
 
     CreateStatusBar();
 }
