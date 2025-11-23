@@ -1,38 +1,49 @@
 #include "DataBuffer.hpp"
 
-DataBuffer::DataBuffer() {}
-DataBuffer::~DataBuffer() {}
+DataBuffer::DataBuffer() {
+    // TODO: any initialization if needed
+}
+DataBuffer::~DataBuffer() {
+    // TODO: clean things up if needed 
+}
 
 void DataBuffer::writeData(const std::string& jsonChunk) {
-    // TODO: append jsonChunk to buffer_
+    // Append the new chunk of raw JSON data to the buffer. This functions only job is to store raw 
+    // inbound data in a way that doesn't lose anything later the parser will call extractNextJson()
+    // parseNextJson()
+    buffer_ += jsonChunk;
 }
 
 void DataBuffer::setData(const std::string& jsonData) {
-    // TODO: replace buffer_ entirely
+    // Overwrite the entire buffer with new raw JSON data
+    buffer_ = jsonData;
 }
 
 std::string DataBuffer::readAll() const {
-    // TODO: return buffer_ as-is
-    return {};
+    // TODO: return raw buffer as is
+    return buffer_;
 }
 
 std::string DataBuffer::consume() {
-    // TODO: return buffer_ and clear it
-    return {};
+    // TODO: copy the raw buffer then clear the buffer and return copied content
+    std::string temp = buffer_;
+    buffer_.clear();
+    return temp;
 }
 
 bool DataBuffer::hasCompleteJson() const {
-    // TODO: call findJsonBoundary() and check if != npos
-    return false;
+    // return true if buffer_ contains sizeof(buffer_data_t) bytes
+    return buffer_.size() >= sizeof(buffer_data_t);
 }
 
 size_t DataBuffer::size() const {
-    // TODO: return buffer_.size()
-    return 0;
+    // return size of internal buffer
+    return buffer_.size();
 }
 
 void DataBuffer::clear() {
-    // TODO: buffer_.clear()
+    // Clear the internal buffer
+    buffer_.clear();
 }
 
 std::string DataBuffer::extractNextJson() {
@@ -44,9 +55,7 @@ std::string DataBuffer::extractNextJson() {
 }
 
 size_t DataBuffer::findJsonBoundary() const {
-    // TODO:
-    // Implement brace matching OR delimiter search
-    // Return index of end of JSON, or npos if incomplete
+    // TODO: for struct based packets, boundary = sizeof(buffer_data_t) retunr npos if incomplete 
     return 0;
 }
 

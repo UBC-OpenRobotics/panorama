@@ -15,7 +15,7 @@ public:
 
     // Append new raw JSON data received from server
     void writeData(const std::string& jsonChunk);
-
+    
     // Replace buffer entirely with fresh raw JSON
     void setData(const std::string& jsonData);
 
