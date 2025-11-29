@@ -11,8 +11,8 @@
 #include <memory>
 #include <map>
 
-#include "client/graph_panel.hpp"
-#include "client/sensor_data_frame.hpp"
+//#include "client/graph_panel.hpp"
+//#include "client/sensor_data_frame.hpp"
 
 class MessageModel;
 //class GraphPanel;
