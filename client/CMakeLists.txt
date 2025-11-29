@@ -15,8 +15,6 @@ set(CLIENT_HEADERS
     include/client/argparser.hpp
     include/client/message_model.hpp
     include/client/tcp_client.hpp
-    include/client/sensor_manager.hpp
-    include/client/sensor_data_panel.h
 )
 
 # Executable settings

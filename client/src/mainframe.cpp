@@ -101,7 +101,5 @@ void MainFrame::updateMessageDisplay() {
         text += wxString::FromUTF8(msg.c_str()) + "\n";
     }
     messageDisplay_->SetValue(text);
-
-    // Scroll to bottom
     messageDisplay_->SetInsertionPointEnd();
 }
