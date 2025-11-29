@@ -1,8 +1,8 @@
 #pragma once
 #include <string>
 #include <vector>
-#include <mutex>   // optional, if buffer must be thread-safe
-#include "client/panorama_defines.hpp"
+#include <mutex>
+#include "common/panorama_defines.hpp"
 
 class DataBuffer {
 public:

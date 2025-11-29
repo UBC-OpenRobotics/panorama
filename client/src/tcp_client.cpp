@@ -1,5 +1,6 @@
 #include "client/tcp_client.hpp"
 #include "client/message_model.hpp"
+#include "common/panorama_utils.hpp"
 #include <cstring>
 #include <chrono>
 
@@ -80,7 +81,12 @@ void TcpClient::run() {
             }
             
             buffer[bytesRead] = '\0';
-            model_->addMessage("Received: " + std::string(buffer));
+            std::string received(buffer);
+
+            // print json
+            pinfo("Received JSON: ", received);
+
+            model_->addMessage("Received: " + received);
         }
     }
 }
