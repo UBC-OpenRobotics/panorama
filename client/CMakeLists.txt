@@ -17,7 +17,7 @@ set(CLIENT_HEADERS
 
 # Executable settings
 if(WIN32)
-    add_executable(panorama-client WIN32 ${CLIENT_SOURCES} ${CLIENT_HEADERS} "src/sensor_manager.cpp")
+    add_executable(panorama-client WIN32 ${CLIENT_SOURCES} ${CLIENT_HEADERS} "src/sensor_manager.cpp" "src/graph_panel.cpp"  )
 elseif(APPLE)
     add_executable(panorama-client MACOSX_BUNDLE ${CLIENT_SOURCES} ${CLIENT_HEADERS})
 else()

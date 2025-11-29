@@ -1,6 +1,6 @@
 #include "client/mainframe.hpp"
 #include "client/message_model.hpp"
-// #include "client/graph_panel.hpp"
+#include "client/graph_panel.hpp"
 // #include "client/sensor_data_frame.hpp"
 #include "client/sensor_manager.hpp"
 #include <wx/dcbuffer.h>
@@ -31,16 +31,7 @@ MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
     dataViewPanel->SetSizer(dataViewSizer);
 
     // Graph panel area
-    wxPanel* graphPanel = new wxPanel(rightSplitter);
-    graphPanel->SetBackgroundColour(wxColour(180, 180, 180));
-    wxStaticText* graphLabel = new wxStaticText(graphPanel, wxID_ANY, "GRAPH PANEL AREA",
-        wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER);
-    wxBoxSizer* graphSizer = new wxBoxSizer(wxVERTICAL);
-    graphSizer->AddStretchSpacer();
-    graphSizer->Add(graphLabel, 0, wxALIGN_CENTER);
-    graphSizer->AddStretchSpacer();
-    graphPanel->SetSizer(graphSizer);
-
+    GraphPanel* graphPanel = new GraphPanel(rightSplitter);
 
     // Create text control for displaying messages (Console)
     wxPanel* consolePanel = new wxPanel(mainSplitter);
