@@ -6,6 +6,8 @@ set(CLIENT_SOURCES
     src/argparser.cpp
     src/message_model.cpp
     src/tcp_client.cpp
+    src/sensor_manager.cpp
+    src/sensor_data_panel.cpp
 )
 
 set(CLIENT_HEADERS

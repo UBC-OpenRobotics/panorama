@@ -28,4 +28,5 @@ private:
 
     std::shared_ptr<MessageModel> model_;
     wxTextCtrl* messageDisplay_;
+
 };
