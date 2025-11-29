@@ -3,7 +3,7 @@
 #include <rapidjson/document.h>
 #include <rapidjson/filereadstream.h>
 #include <string>
-#include "panorama_defines.hpp"
+#include "common/panorama_defines.hpp"
 
 class JsonReader {
 public:

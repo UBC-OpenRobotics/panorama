@@ -7,24 +7,30 @@ set(CLIENT_SOURCES
     src/message_model.cpp
     src/tcp_client.cpp
     src/json_reader.cpp
+    src/DataBuffer.cpp
+)
+
+set(COMMON_HEADERS
+    include/common/panorama_defines.hpp
+    include/common/panorama_utils.hpp
 )
 
 set(CLIENT_HEADERS
-    include/client/panorama_defines.hpp
     include/client/mainframe.hpp
     include/client/argparser.hpp
     include/client/message_model.hpp
     include/client/tcp_client.hpp
     include/client/json_reader.hpp
+    include/client/DataBuffer.hpp
 )
 
 # Executable settings
 if(WIN32)
-    add_executable(panorama-client WIN32 ${CLIENT_SOURCES} ${CLIENT_HEADERS})
+    add_executable(panorama-client WIN32 ${CLIENT_SOURCES} ${COMMON_HEADERS} ${CLIENT_HEADERS})
 elseif(APPLE)
-    add_executable(panorama-client MACOSX_BUNDLE ${CLIENT_SOURCES} ${CLIENT_HEADERS})
+    add_executable(panorama-client MACOSX_BUNDLE ${CLIENT_SOURCES} ${COMMON_HEADERS} ${CLIENT_HEADERS})
 else()
-    add_executable(panorama-client ${CLIENT_SOURCES} ${CLIENT_HEADERS})
+    add_executable(panorama-client ${CLIENT_SOURCES} ${COMMON_HEADERS} ${CLIENT_HEADERS})
 endif()
 
 # Panorama Includes
