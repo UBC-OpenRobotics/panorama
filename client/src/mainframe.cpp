@@ -1,6 +1,6 @@
 #include "client/mainframe.hpp"
 #include "client/message_model.hpp"
-#include "client/graph_panel.hpp
+#include "client/graph_panel.hpp"
 #include "client/sensor_data_panel.h"
 #include "client/sensor_manager.hpp"
 #include <wx/dcbuffer.h>
@@ -17,7 +17,6 @@ MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
     // Create the four main panels
     // Sensor manager panel
     SensorManagerPanel* sensorPanel = new SensorManagerPanel(topSplitter);
-    
 
     // Data view area - Sensor Data Panel
     wxArrayString sensorNames;
@@ -59,8 +58,7 @@ MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
     consolePanel->SetSizer(consoleSizer);
 
     // Assemble splitters
-    
-    rightSplitter->SplitHorizontally(dataViewPanel, graphPanel, 300);
+    rightSplitter->SplitHorizontally(dataViewPanel, graphPanel, 200);
     rightSplitter->SetMinimumPaneSize(50);  
     
     topSplitter->SplitVertically(sensorPanel, rightSplitter, 200);
