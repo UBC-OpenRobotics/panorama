@@ -3,6 +3,7 @@
 #include <rapidjson/document.h>
 #include <rapidjson/filereadstream.h>
 #include <string>
+#include "panorama_defines.hpp"
 
 class JsonReader {
 public:
@@ -14,6 +15,8 @@ public:
 
     // Accessors for JSON data
     const rapidjson::Document& getDocument() const;
+
+    buffer_data_t exportToBuffer(); 
 
 private:
     std::string filename_;
