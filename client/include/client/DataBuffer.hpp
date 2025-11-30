@@ -3,6 +3,7 @@
 #include <vector>
 #include <mutex>
 #include "common/panorama_defines.hpp"
+#include <list>
 
 class DataBuffer {
 public:
@@ -14,16 +15,16 @@ public:
     // ---------------------------
 
     // Append new raw JSON data received from server
-    void writeData(const std::string& jsonChunk);
+    void writeData(buffer_data_t jsonChunk);
     
     // Replace buffer entirely with fresh raw JSON
-    void setData(const std::string& jsonData);
+    void setData(buffer_data_t jsonData);
 
     // Return the entire buffer content (without clearing)
-    std::string readAll() const;
+    std::list<buffer_data_t> readAll() const;
 
     // Return and clear the buffer (consume)
-    std::string consume();
+    std::list<buffer_data_t> consume();
 
     // Does the buffer currently contain a complete JSON object?
     bool hasCompleteJson() const;
@@ -54,7 +55,7 @@ public:
 
 private:
     // Raw buffer storing incoming data
-    std::string buffer_;
+    std::list<buffer_data_t> buffer_;
 
     // ---------------------------
     //      JSON HELPER LOGIC

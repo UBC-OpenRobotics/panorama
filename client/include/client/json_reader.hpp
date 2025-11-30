@@ -8,7 +8,7 @@
 class JsonReader {
 public:
     // Constructor takes the filename of the JSON file
-    JsonReader(const std::string& filename);
+    JsonReader();
 
     // Parse the JSON file
     bool parse();
@@ -16,7 +16,7 @@ public:
     // Accessors for JSON data
     const rapidjson::Document& getDocument() const;
 
-    buffer_data_t exportToBuffer(); 
+    buffer_data_t exportToBuffer(std::string json); 
 
 private:
     std::string filename_;

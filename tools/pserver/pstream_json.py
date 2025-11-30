@@ -50,5 +50,6 @@ class PStreamJSON(PStreamBase):
         # Convert to JSON string with newline delimiter ('\n')
         json_str = json.dumps(json_obj)
         message = json_str + '\n'
+       
 
         return message.encode('utf-8')

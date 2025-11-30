@@ -29,7 +29,7 @@ class PServer:
                     continue
                 
                 client_socket.sendall(data)
-                pinfo("PServer", f"Sent: {data.decode('utf-8').strip()}")
+                #pinfo("PServer", f"Sent: {data.decode('utf-8').strip()}")
                 counter += 1
 
         except (BrokenPipeError, ConnectionResetError) as e:

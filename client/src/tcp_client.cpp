@@ -4,6 +4,8 @@
 #include <cstring>
 #include <chrono>
 
+#include "client/json_reader.hpp"
+
 #ifdef _WIN32
     #include <winsock2.h>
     #include <ws2tcpip.h>
@@ -69,7 +71,7 @@ void TcpClient::run() {
             std::this_thread::sleep_for(std::chrono::seconds(5));
             continue;
         }
-        
+        JsonReader reader = JsonReader();
         // Read data from server
         char buffer[4096];
         while (running_) {
@@ -82,9 +84,10 @@ void TcpClient::run() {
             
             buffer[bytesRead] = '\0';
             std::string received(buffer);
-
+            
             // print json
-            pinfo("Received JSON: ", received);
+            //pinfo("Received JSON: ", received);
+            reader.exportToBuffer(received);
 
             model_->addMessage("Received: " + received);
         }
