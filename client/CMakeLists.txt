@@ -6,6 +6,8 @@ set(CLIENT_SOURCES
     src/argparser.cpp
     src/message_model.cpp
     src/tcp_client.cpp
+    src/sensor_manager.cpp
+    src/sensor_data_panel.cpp
 )
 
 set(CLIENT_HEADERS
@@ -17,7 +19,7 @@ set(CLIENT_HEADERS
 
 # Executable settings
 if(WIN32)
-    add_executable(panorama-client WIN32 ${CLIENT_SOURCES} ${CLIENT_HEADERS})
+    add_executable(panorama-client WIN32 ${CLIENT_SOURCES} ${CLIENT_HEADERS} "src/sensor_manager.cpp" "src/graph_panel.cpp"  )
 elseif(APPLE)
     add_executable(panorama-client MACOSX_BUNDLE ${CLIENT_SOURCES} ${CLIENT_HEADERS})
 else()
