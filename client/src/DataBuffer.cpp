@@ -20,6 +20,7 @@ void DataBuffer::setData(buffer_data_t jsonData) {
     buffer_.push_front(jsonData);
 }
 
+<<<<<<< Updated upstream
 std::list<buffer_data_t> DataBuffer::readAll() const {
     // TODO: return raw buffer as is
     return buffer_;
@@ -28,23 +29,18 @@ std::list<buffer_data_t> DataBuffer::readAll() const {
 std::list<buffer_data_t> DataBuffer::consume() {
     // TODO: copy the raw buffer then clear the buffer and return copied content
     std::list<buffer_data_t> temp = buffer_;
+=======
+std::string DataBuffer::readAll() const {
+    // TODO: return buffer as is
+    return buffer_;
+}
+
+std::string DataBuffer::consume() {
+    // TODO: return all data AND clear buffer_
+    std::string temp = buffer_;
+>>>>>>> Stashed changes
     buffer_.clear();
     return temp;
-}
-
-bool DataBuffer::hasCompleteJson() const {
-    // return true if buffer_ contains sizeof(buffer_data_t) bytes
-    return buffer_.size() >= sizeof(buffer_data_t);
-}
-
-size_t DataBuffer::size() const {
-    // return size of internal buffer
-    return buffer_.size();
-}
-
-void DataBuffer::clear() {
-    // Clear the internal buffer
-    buffer_.clear();
 }
 
 std::string DataBuffer::extractNextJson() {
@@ -90,4 +86,24 @@ void DataBuffer::parseAll(/* std::vector<ParsedData> &out */) {
     // Loop:
     //   while (hasCompleteJson())
     //     parseNextJson(...)
+}
+
+std::string toString(const buffer_data_t& buffer_item) {
+    //convert one struct of buffer_ into string
+    std::string temp = "{";
+    temp = temp + "\"" + buffer_item.a + "\": " + std::to_string(buffer_item.a_data) + ", ";
+    temp = temp + "\"" + buffer_item.b + "\": " + std::to_string(buffer_item.b_data);
+    temp += "}";
+    return temp;
+}
+
+std::string toStringAll() {
+    //print all buffer_ as string
+    //buffer_ is an array of buffer_data_t
+    std::string res = "";
+
+    for (buffer_data_t buffer_item : buffer_) {
+        res += toString(buffer_item) + ",\n";
+    }
+    return res;
 }

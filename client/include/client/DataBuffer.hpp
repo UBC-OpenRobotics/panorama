@@ -53,6 +53,10 @@ public:
     // Useful if the buffer contains multiple messages.
     void parseAll(/* std::vector<ParsedData> &out */);
 
+    std::string toString(const buffer_data_t& item);
+
+    std::string toStringAll() const;
+
 private:
     // Raw buffer storing incoming data
     std::list<buffer_data_t> buffer_;
