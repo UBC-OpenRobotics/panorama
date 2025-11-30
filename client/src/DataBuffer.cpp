@@ -20,7 +20,6 @@ void DataBuffer::setData(buffer_data_t jsonData) {
     buffer_.push_front(jsonData);
 }
 
-<<<<<<< Updated upstream
 std::list<buffer_data_t> DataBuffer::readAll() const {
     // TODO: return raw buffer as is
     return buffer_;
@@ -29,20 +28,7 @@ std::list<buffer_data_t> DataBuffer::readAll() const {
 std::list<buffer_data_t> DataBuffer::consume() {
     // TODO: copy the raw buffer then clear the buffer and return copied content
     std::list<buffer_data_t> temp = buffer_;
-=======
-std::string DataBuffer::readAll() const {
-    // TODO: return buffer as is
-    return buffer_;
 }
-
-std::string DataBuffer::consume() {
-    // TODO: return all data AND clear buffer_
-    std::string temp = buffer_;
->>>>>>> Stashed changes
-    buffer_.clear();
-    return temp;
-}
-
 std::string DataBuffer::extractNextJson() {
     // TODO:
     // 1. Use findJsonBoundary() to locate a complete JSON object
@@ -88,7 +74,7 @@ void DataBuffer::parseAll(/* std::vector<ParsedData> &out */) {
     //     parseNextJson(...)
 }
 
-std::string toString(const buffer_data_t& buffer_item) {
+std::string DataBuffer::toString(const buffer_data_t& buffer_item) {
     //convert one struct of buffer_ into string
     std::string temp = "{";
     temp = temp + "\"" + buffer_item.a + "\": " + std::to_string(buffer_item.a_data) + ", ";
@@ -97,7 +83,7 @@ std::string toString(const buffer_data_t& buffer_item) {
     return temp;
 }
 
-std::string toStringAll() {
+std::string DataBuffer::toStringAll() {
     //print all buffer_ as string
     //buffer_ is an array of buffer_data_t
     std::string res = "";

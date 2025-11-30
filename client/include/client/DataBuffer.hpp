@@ -55,7 +55,7 @@ public:
 
     std::string toString(const buffer_data_t& item);
 
-    std::string toStringAll() const;
+    std::string toStringAll();
 
 private:
     // Raw buffer storing incoming data
