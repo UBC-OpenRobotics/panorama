@@ -7,26 +7,27 @@ DataBuffer::~DataBuffer() {
     // TODO: clean things up if needed 
 }
 
-void DataBuffer::writeData(const std::string& jsonChunk) {
+void DataBuffer::writeData(buffer_data_t jsonChunk) {
     // Append the new chunk of raw JSON data to the buffer. This functions only job is to store raw 
     // inbound data in a way that doesn't lose anything later the parser will call extractNextJson()
     // parseNextJson()
-    buffer_ += jsonChunk;
+    buffer_.push_back(jsonChunk);
 }
 
-void DataBuffer::setData(const std::string& jsonData) {
+void DataBuffer::setData(buffer_data_t jsonData) {
     // Overwrite the entire buffer with new raw JSON data
-    buffer_ = jsonData;
+    buffer_.clear();
+    buffer_.push_front(jsonData);
 }
 
-std::string DataBuffer::readAll() const {
+std::list<buffer_data_t> DataBuffer::readAll() const {
     // TODO: return raw buffer as is
     return buffer_;
 }
 
-std::string DataBuffer::consume() {
+std::list<buffer_data_t> DataBuffer::consume() {
     // TODO: copy the raw buffer then clear the buffer and return copied content
-    std::string temp = buffer_;
+    std::list<buffer_data_t> temp = buffer_;
     buffer_.clear();
     return temp;
 }
