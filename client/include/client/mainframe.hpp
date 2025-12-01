@@ -12,12 +12,12 @@
 #include <map>
 
 //#include "client/graph_panel.hpp"
-//#include "client/sensor_data_frame.hpp"
+//#include "client/sensor_data_panel.h"
 
 class MessageModel;
 //class GraphPanel;
 class SensorDataManager;
-//class SensorDataFrame;  // Add this
+//class SensorDataPanel;
 
 class MainFrame : public wxFrame {
 public:

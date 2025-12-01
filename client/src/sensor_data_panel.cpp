@@ -1,7 +1,8 @@
 #include "client/sensor_data_panel.h"
 #include <wx/datetime.h>
 
-SensorDataFrame::SensorDataFrame(wxWindow* parent, const wxArrayString& sensorNames)
+
+SensorDataPanel::SensorDataPanel(wxWindow* parent, const wxArrayString& sensorNames)
     : wxPanel(parent, wxID_ANY), 
       sensorNames_(sensorNames) {
     
@@ -30,12 +31,12 @@ SensorDataFrame::SensorDataFrame(wxWindow* parent, const wxArrayString& sensorNa
     InitializeGrid();
     
     // Use sizer to make grid fill the entire panel
-  wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
+    wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
     sizer->Add(grid_, 1, wxEXPAND);
     SetSizer(sizer);
     
     // Bind size event to adjust columns dynamically
-    Bind(wxEVT_SIZE, &SensorDataFrame::OnSize, this);
+    Bind(wxEVT_SIZE, &SensorDataPanel::OnSize, this);
     
     // Trigger initial column sizing after a short delay
     CallAfter([this]() {
@@ -44,7 +45,7 @@ SensorDataFrame::SensorDataFrame(wxWindow* parent, const wxArrayString& sensorNa
     });
 }
 
-void SensorDataFrame::OnSize(wxSizeEvent& event) {
+void SensorDataPanel::OnSize(wxSizeEvent& event) {
     event.Skip();  // Let default handler process first
     
     if (!grid_) return;
@@ -72,7 +73,7 @@ void SensorDataFrame::OnSize(wxSizeEvent& event) {
     grid_->ForceRefresh();
 }
 
-void SensorDataFrame::InitializeGrid() {
+void SensorDataPanel::InitializeGrid() {
     for (size_t i = 0; i < sensorNames_.GetCount(); ++i) {
         grid_->SetCellValue(i, 0, sensorNames_[i]);
         grid_->SetCellValue(i, 1, "--");
@@ -84,7 +85,7 @@ void SensorDataFrame::InitializeGrid() {
     }
 }
 
-void SensorDataFrame::UpdateReading(const std::string& sensorName, double value, const std::string& unit) {
+void SensorDataPanel::UpdateReading(const std::string& sensorName, double value, const std::string& unit) {
     int row = FindSensorRow(sensorName);
     if (row == -1) return;
     
@@ -108,11 +109,11 @@ void SensorDataFrame::UpdateReading(const std::string& sensorName, double value,
     grid_->ForceRefresh();
 }
 
-void SensorDataFrame::ClearReadings() {
+void SensorDataPanel::ClearReadings() {
     InitializeGrid();
 }
 
-void SensorDataFrame::SetActiveSensors(const std::vector<std::string>& sensors) {
+void SensorDataPanel::SetActiveSensors(const std::vector<std::string>& sensors) {
     for (int i = 0; i < grid_->GetNumberRows(); ++i) {
         wxString sensorName = grid_->GetCellValue(i, 0);
         bool isActive = std::find(sensors.begin(), sensors.end(), 
@@ -131,7 +132,7 @@ void SensorDataFrame::SetActiveSensors(const std::vector<std::string>& sensors) 
     grid_->ForceRefresh();
 }
 
-int SensorDataFrame::FindSensorRow(const std::string& sensorName) {
+int SensorDataPanel::FindSensorRow(const std::string& sensorName) {
     for (int i = 0; i < grid_->GetNumberRows(); ++i) {
    if (grid_->GetCellValue(i, 0).ToStdString() == sensorName) {
    return i;

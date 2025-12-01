@@ -26,14 +26,11 @@ MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
     sensorNames.Add("Sensor 3");
     sensorNames.Add("Sensor 4");
     sensorNames.Add("Sensor 5");
-    sensorNames.Add("Sensor 6");
-    sensorNames.Add("Sensor 7");
-    sensorNames.Add("Sensor 8");
     sensorNames.Add("Another one");
     wxPanel* dataViewPanel = new wxPanel(rightSplitter);
     dataViewPanel->SetBackgroundColour(wxColour(240, 240, 240)); 
 
-  SensorDataFrame* sensorDataGrid = new SensorDataFrame(dataViewPanel, sensorNames);
+    SensorDataPanel* sensorDataGrid = new SensorDataPanel(dataViewPanel, sensorNames);
     
     wxBoxSizer* dataViewSizer = new wxBoxSizer(wxVERTICAL);
     dataViewSizer->Add(sensorDataGrid, 1, wxEXPAND);
