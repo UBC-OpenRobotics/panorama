@@ -8,13 +8,14 @@ set(CLIENT_SOURCES
     src/tcp_client.cpp
     src/json_reader.cpp
     src/DataBuffer.cpp
+    src/graph_panel.cpp
+    src/sensor_manager.cpp
+    src/sensor_data_panel.cpp
 )
 
 set(COMMON_HEADERS
     include/common/panorama_defines.hpp
     include/common/panorama_utils.hpp
-    src/sensor_manager.cpp
-    src/sensor_data_panel.cpp
 )
 
 set(CLIENT_HEADERS
@@ -24,6 +25,9 @@ set(CLIENT_HEADERS
     include/client/tcp_client.hpp
     include/client/json_reader.hpp
     include/client/DataBuffer.hpp
+    include/client/sensor_manager.hpp
+    include/client/sensor_data_panel.h
+    include/client/graph_panel.hpp
 )
 
 # Executable settings
