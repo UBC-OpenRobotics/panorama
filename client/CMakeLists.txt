@@ -13,6 +13,8 @@ set(CLIENT_SOURCES
 set(COMMON_HEADERS
     include/common/panorama_defines.hpp
     include/common/panorama_utils.hpp
+    src/sensor_manager.cpp
+    src/sensor_data_panel.cpp
 )
 
 set(CLIENT_HEADERS
