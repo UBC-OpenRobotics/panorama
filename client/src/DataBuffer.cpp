@@ -85,11 +85,34 @@ std::string DataBuffer::toString(const buffer_data_t& buffer_item) {
 
 std::string DataBuffer::toStringAll() {
     //print all buffer_ as string
-    //buffer_ is an array of buffer_data_t
+    //buffer_ is a list of buffer_data_t
     std::string res = "";
 
-    for (buffer_data_t buffer_item : buffer_) {
-        res += toString(buffer_item) + ",\n";
+    for (auto it = buffer_.begin(); it != buffer_.end(); it++) {
+        buffer_data_t item = *it;
+        res += toString(item);
+
+        //add a comma and a new line after every element
+        auto next = std::next(it);
+        if (next != buffer_.end()) {
+            res += ",\n";
+        }
     }
+
     return res;
 }
+
+void DataBuffer::exportBuffer() {
+    //Export the entire buffer (make a local JSON file under client/src/)
+    FILE* fp = fopen("../src/exported_buffer.json", "w");
+    if (!fp) {
+		std::cerr << "Could not open file for writing exported buffer." << std::endl;
+        return;
+    }
+    
+    std::string json_content = "[\n" + toStringAll() + "\n]";
+    fputs(json_content, fp);
+    fclose(fp);
+    return;
+}
+

@@ -57,6 +57,8 @@ public:
 
     std::string toStringAll();
 
+    void exportBuffer();
+
 private:
     // Raw buffer storing incoming data
     std::list<buffer_data_t> buffer_;
