@@ -111,7 +111,7 @@ void DataBuffer::exportBuffer() {
     }
     
     std::string json_content = "[\n" + toStringAll() + "\n]";
-    fputs(json_content, fp);
+    fputs(json_content.c_str(), fp);
     fclose(fp);
     return;
 }
