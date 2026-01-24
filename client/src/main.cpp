@@ -5,7 +5,8 @@
 #include "client/argparser.hpp"
 #include "client/message_model.hpp"
 #include "client/tcp_client.hpp"
-#include "client/json_reader.hpp" 
+#include "client/DataBuffer.hpp"
+#include "client/json_reader.hpp"
 #include <iostream>
 using namespace std;
 
@@ -35,8 +36,12 @@ public:
         // --- Create model (shared between view and controller) ---
         model_ = std::make_shared<MessageModel>();
 
+        // --- Create DataBuffer (shared between TCP client and GUI) ---
+        dataBuffer_ = std::make_shared<DataBuffer>();
+
         // --- Create and start TCP client on separate thread ---
-        tcpClient_ = std::make_unique<TcpClient>("127.0.0.1", 3000, model_);
+        // TODO: FIX 127.0.0.1:3000 to allow ESP32 to actually connect
+        tcpClient_ = std::make_unique<TcpClient>("127.0.0.1", 3000, model_, dataBuffer_);
         tcpClient_->start();
 
         // For running without a gui
@@ -51,9 +56,10 @@ public:
         }
 
         // --- Create view ---
-        MainFrame* w = new MainFrame("Panorama Client", model_);
+        MainFrame* w = new MainFrame("Panorama Client", model_, dataBuffer_);
         w->Show();
 
+ 
         // --- If test mode, quit after 3 seconds ---
         if (parser.isTestMode()) {
             wxTimer* timer = new wxTimer(this);
@@ -77,6 +83,7 @@ public:
 
 private:
     std::shared_ptr<MessageModel> model_;
+    std::shared_ptr<DataBuffer> dataBuffer_;
     std::unique_ptr<TcpClient> tcpClient_;
 };
 

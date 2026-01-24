@@ -1,11 +1,13 @@
-#pragma once
+#ifndef __DATABUFFER__
+#define __DATABUFFER__
 #include <string>
 #include <vector>
 #include <mutex>
 #include "common/panorama_defines.hpp"
+#include "client/buffer_base.hpp"
 #include <list>
 
-class DataBuffer {
+class DataBuffer : public BufferBase<buffer_data_t> {
 public:
     DataBuffer();
     ~DataBuffer();
@@ -78,3 +80,4 @@ private:
     // This keeps parsing logic isolated from buffer logic
     bool decodeJson(const std::string& jsonStr /*, ParsedData &out */);
 };
+#endif // __DATABUFFER__

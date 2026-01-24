@@ -8,27 +8,41 @@ DataBuffer::~DataBuffer() {
 }
 
 void DataBuffer::writeData(buffer_data_t jsonChunk) {
-    // Append the new chunk of raw JSON data to the buffer. This functions only job is to store raw 
+    // Append the new chunk of raw JSON data to the buffer. This functions only job is to store raw
     // inbound data in a way that doesn't lose anything later the parser will call extractNextJson()
     // parseNextJson()
-    buffer_.push_back(jsonChunk);
+    write(jsonChunk);
 }
 
 void DataBuffer::setData(buffer_data_t jsonData) {
     // Overwrite the entire buffer with new raw JSON data
-    buffer_.clear();
-    buffer_.push_front(jsonData);
+    BufferBase<buffer_data_t>::setData(jsonData);
 }
 
 std::list<buffer_data_t> DataBuffer::readAll() const {
     // TODO: return raw buffer as is
-    return buffer_;
+    return BufferBase<buffer_data_t>::readAll();
 }
 
 std::list<buffer_data_t> DataBuffer::consume() {
     // TODO: copy the raw buffer then clear the buffer and return copied content
-    std::list<buffer_data_t> temp = buffer_;
+    return BufferBase<buffer_data_t>::consume();
 }
+
+size_t DataBuffer::size() const {
+    return BufferBase<buffer_data_t>::size();
+}
+
+void DataBuffer::clear() {
+    BufferBase<buffer_data_t>::clear();
+}
+
+bool DataBuffer::hasCompleteJson() const {
+    // For now, just check if buffer is not empty
+    // In a more sophisticated implementation, this would check for complete JSON objects
+    return !buffer_.empty();
+}
+
 std::string DataBuffer::extractNextJson() {
     // TODO:
     // 1. Use findJsonBoundary() to locate a complete JSON object

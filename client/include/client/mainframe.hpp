@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __MAINFRAME__
+#define __MAINFRAME__
 #include <wx/wx.h>
 #include <wx/splitter.h>
 #include <wx/notebook.h>
@@ -13,6 +14,7 @@
 
 
 class MessageModel;
+class DataBuffer;
 //class GraphPanel;
 class SensorDataManager;
 //class SensorDataFrame;  // Add this
@@ -20,6 +22,7 @@ class SensorDataManager;
 class MainFrame : public wxFrame {
 public:
     MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
+        std::shared_ptr<DataBuffer> dataBuffer,
         const wxPoint& pos = wxDefaultPosition,
         const wxSize& size = wxSize(1200, 800));
 
@@ -27,6 +30,9 @@ private:
     void updateMessageDisplay();
 
     std::shared_ptr<MessageModel> model_;
+    std::shared_ptr<DataBuffer> dataBuffer_;
     wxTextCtrl* messageDisplay_;
 
 };
+
+#endif // __MAINFRAME__
