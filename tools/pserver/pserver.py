@@ -41,7 +41,7 @@ class PServer:
 
 def main():
     host = '127.0.0.1'
-    port = 3000
+    port = 4000
 
     if len(sys.argv) > 1:
         port = int(sys.argv[1])

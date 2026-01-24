@@ -36,7 +36,7 @@ public:
         model_ = std::make_shared<MessageModel>();
 
         // --- Create and start TCP client on separate thread ---
-        tcpClient_ = std::make_unique<TcpClient>("127.0.0.1", 3000, model_);
+        tcpClient_ = std::make_unique<TcpClient>("127.0.0.1", 4000, model_);
         tcpClient_->start();
 
         // For running without a gui
