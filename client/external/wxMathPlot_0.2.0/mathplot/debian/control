@@ -1,0 +1,31 @@
+Source: wxmathplot
+Priority: extra
+Maintainer: Davide Rondini <cdron77@users.sourceforge.net>
+Build-Depends: debhelper (>= 7), cmake (>= 2.4), libwxbase2.8-dev | libwxbase3.0-dev, libwxgtk2.8-dev | libwxgtk3.0-dev | libwxgtk3.0-gtk3-dev
+Standards-Version: 3.7.3
+Section: libs
+Homepage: http://wxmathplot.sourceforge.net
+
+Package: libwxmathplot-dev
+Section: libdevel
+Architecture: any
+Depends: libwxmathplot (= ${binary:Version})
+Description: wxMathPlot is a plot add-on library for wxWidgets (development package)
+ wxMathPlot is a library to add 2D scientific plot functionality to
+ wxWidgets. It allows to embed inside your program a window for plotting
+ scientific, statistical or mathematical data, with additions like legend or
+ coordinate display in overlay.
+ This is the development package including headers and original CMakeLists.txt file.
+ 
+
+Package: libwxmathplot
+Section: libs
+Architecture: any
+Depends:  libwxbase2.8-0 | libwxbase3.0-0 | libwxbase3.0-0v5, libwxgtk2.8-0 | libwxgtk3.0-0 | libwxgtk3.0-0v5 | libwxgtk3.0-gtk3-0v5, ${shlibs:Depends}, ${misc:Depends}
+Description: wxMathPlot is a plot add-on library for wxWidgets
+ wxMathPlot is a library to add 2D scientific plot functionality to
+ wxWidgets. It allows to embed inside your program a window for plotting
+ scientific, statistical or mathematical data, with additions like legend or
+ coordinate display in overlay.
+
+

@@ -30,6 +30,8 @@ set(CLIENT_HEADERS
     include/client/graph_panel.hpp
 )
 
+add_subdirectory(external/wxMathPlot_0.2.0/mathplot)
+
 # Executable settings
 if(WIN32)
     add_executable(panorama-client WIN32 ${CLIENT_SOURCES} ${COMMON_HEADERS} ${CLIENT_HEADERS})
