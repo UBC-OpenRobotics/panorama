@@ -1,5 +1,29 @@
 #include <WiFi.h>
 
+
+/*
+Alex: suggestions
+#include "esp_http_server.h"
+#include "esp_timer.h"
+#include "Arduino.h"
+#include "lwip/sockets.h"       
+#include <sys/param.h>
+#include <stdlib.h>
+#include <string.h>
+
+String WiFiAddr;
+
+
+typedef struct {
+  httpd_req_t *req;
+  size_t len;
+} export_data_t;
+
+
+*/
+
+
+
 // Wi-Fi Access Point credentials
 const char* SSID = "ESP32-Interface";
 const char* PASS = "12345678";
@@ -52,6 +76,42 @@ void handleCommand(String cmd) {
     Serial.printf("Unknown cmd: %s\n", cmd.c_str());
   }
 }
+
+/*
+We can look into using URIs to distinguish between different types of cmds and host different types of data
+
+static size_t encode_export_data_stream(void* arg, size_t index, const void* data, size_t len) {
+  export_data_t *d = (export_data_t *) arg;
+  if (!index) {
+    d->len = 0; 
+  }
+  if (httpd_resp_send_chunk(d->req, (const char *)data, len) != ESP_OK){
+    return 0;
+  }
+  d->len += len;
+  return len;
+}
+
+
+static esp_err_t capture_handler(httpd_req_t *req) {
+  esp_err_t res = ESP_OK;
+  int64_t chunk_start_time = esp_timer_get_time();
+
+  httpd_resp_set_type(req, "data/json");
+
+  // get local buffer
+
+  // if buffer size == the size we define
+    // res = httpd_resp_send(..);
+  // else 
+  //  httpd_resp_send_chunk(..);
+
+  return res // result from httpd_resp_send(...)
+}
+
+
+*/
+
 
 void loop() {
   // accept new client
