@@ -1,4 +1,5 @@
 #include "client/DataBuffer.hpp"
+#include <iostream>
 
 DataBuffer::DataBuffer() {
     // TODO: any initialization if needed
@@ -11,7 +12,14 @@ void DataBuffer::writeData(buffer_data_t jsonChunk) {
     // Append the new chunk of raw JSON data to the buffer. This functions only job is to store raw
     // inbound data in a way that doesn't lose anything later the parser will call extractNextJson()
     // parseNextJson()
+    std::cout << "[DataBuffer] Writing data to buffer:" << std::endl;
+    std::cout << "[DataBuffer]   a: '" << jsonChunk.a << "' a_data: " << jsonChunk.a_data << std::endl;
+    std::cout << "[DataBuffer]   b: '" << jsonChunk.b << "' b_data: " << jsonChunk.b_data << std::endl;
+    std::cout << "[DataBuffer]   Buffer size before write: " << size() << std::endl;
+
     write(jsonChunk);
+
+    std::cout << "[DataBuffer]   Buffer size after write: " << size() << std::endl;
 }
 
 void DataBuffer::setData(buffer_data_t jsonData) {
@@ -91,8 +99,22 @@ void DataBuffer::parseAll(/* std::vector<ParsedData> &out */) {
 std::string DataBuffer::toString(const buffer_data_t& buffer_item) {
     //convert one struct of buffer_ into string
     std::string temp = "{";
-    temp = temp + "\"" + buffer_item.a + "\": " + std::to_string(buffer_item.a_data) + ", ";
-    temp = temp + "\"" + buffer_item.b + "\": " + std::to_string(buffer_item.b_data);
+
+    // 
+    bool hasA = buffer_item.a != '\0';
+    bool hasB = buffer_item.b != '\0';
+
+    if (hasA) {
+        temp = temp + "\"" + buffer_item.a + "\": " + std::to_string(buffer_item.a_data);
+        if (hasB) {
+            temp += ", ";
+        }
+    }
+
+    if (hasB) {
+        temp = temp + "\"" + buffer_item.b + "\": " + std::to_string(buffer_item.b_data);
+    }
+
     temp += "}";
     return temp;
 }
