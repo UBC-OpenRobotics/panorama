@@ -49,7 +49,7 @@ public:
     // Parse the next complete JSON object in the buffer.
     // Returns success/failure depending on whether parsing succeeded.
     // The parsed result can be returned as a variant, struct, or any user-defined type.
-    bool parseNextJson(/* ParsedData &out */);
+    std::string parseNextJson(/* ParsedData &out */);
 
     // Parse *all* complete JSON objects currently in the buffer.
     // Useful if the buffer contains multiple messages.

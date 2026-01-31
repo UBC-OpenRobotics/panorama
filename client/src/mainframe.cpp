@@ -94,10 +94,11 @@ void MainFrame::updateMessageDisplay() {
     for (const auto& msg : messages) {
         text += wxString::FromUTF8(msg.c_str()) + "\n";
     }
-    
-    if (dataBuffer_ && dataBuffer_->size() > 0) {
+
+    if (dataBuffer_->size() > 0) {
+        std::cout << dataBuffer_->toStringAll();
         text += "\n--- DataBuffer Contents ---\n";
-        text += wxString::FromUTF8(dataBuffer_->toStringAll().c_str());
+        text += wxString::FromUTF8(dataBuffer_->toStringAll());
         text += "--- End of DataBuffer ---\n";
     }
 

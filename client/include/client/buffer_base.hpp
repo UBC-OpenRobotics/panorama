@@ -25,6 +25,7 @@ public:
     virtual void write(T data) {
         std::lock_guard<std::mutex> lock(mutex_);
         buffer_.push_back(std::move(data));
+        
     }
 
     /**
@@ -57,6 +58,17 @@ public:
         return result;
     }
 
+    // Returns the first element of the buffer and removes it from the buffer
+    virtual T extractNextBuffer() {
+        buffer_data_t ret = buffer_.front();
+        buffer_.pop_front();
+        return ret;
+    }    
+
+    virtual void popFront() {
+        buffer_.pop_front();
+    }
+
     /**
      * @brief Get the number of elements in the buffer
      * @return The number of elements
@@ -86,4 +98,5 @@ public:
 protected:
     std::list<T> buffer_;
     mutable std::mutex mutex_;
+    int MAX_BUFFER_SIZE = 2;
 };

@@ -68,7 +68,7 @@ buffer_data_t JsonReader::exportToBuffer(std::string json) {
 
     double sensorValue = doc["value"].GetDouble();
     
-    std::cout << sensorTypeString << sensorValue << sensorUnitString << std::endl;
+   // std::cout << sensorTypeString << sensorValue << sensorUnitString << std::endl;
     if (sensorTypeString == "temperature") {
         ret.a = 'a';
         ret.a_data = sensorValue;

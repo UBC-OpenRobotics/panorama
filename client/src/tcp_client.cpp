@@ -89,7 +89,7 @@ void TcpClient::run() {
             // Parse JSON and write to DataBuffer
             buffer_data_t parsedData = reader.exportToBuffer(received);
             dataBuffer_->writeData(parsedData);
-
+            model_->addMessage("Data" + std::to_string(dataBuffer_->size()));
             model_->addMessage("Received: " + received);
         }
     }

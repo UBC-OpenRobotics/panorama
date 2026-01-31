@@ -1,5 +1,6 @@
 #include "client/DataBuffer.hpp"
 #include <iostream>
+#include <iostream>
 
 DataBuffer::DataBuffer() {
     // TODO: any initialization if needed
@@ -12,14 +13,18 @@ void DataBuffer::writeData(buffer_data_t jsonChunk) {
     // Append the new chunk of raw JSON data to the buffer. This functions only job is to store raw
     // inbound data in a way that doesn't lose anything later the parser will call extractNextJson()
     // parseNextJson()
-    std::cout << "[DataBuffer] Writing data to buffer:" << std::endl;
-    std::cout << "[DataBuffer]   a: '" << jsonChunk.a << "' a_data: " << jsonChunk.a_data << std::endl;
-    std::cout << "[DataBuffer]   b: '" << jsonChunk.b << "' b_data: " << jsonChunk.b_data << std::endl;
-    std::cout << "[DataBuffer]   Buffer size before write: " << size() << std::endl;
+   // std::cout << "[DataBuffer] Writing data to buffer:" << std::endl;
+   // std::cout << "[DataBuffer]   a: '" << jsonChunk.a << "' a_data: " << jsonChunk.a_data << std::endl;
+   // std::cout << "[DataBuffer]   b: '" << jsonChunk.b << "' b_data: " << jsonChunk.b_data << std::endl;
+   // std::cout << "[DataBuffer]   Buffer size before write: " << size() << std::endl;
 
     write(jsonChunk);
-
-    std::cout << "[DataBuffer]   Buffer size after write: " << size() << std::endl;
+    if (size() >= MAX_BUFFER_SIZE) {
+        popFront();
+    }
+    // std::cout << "[DataBuffer]   Buffer size after write: " << size() << std::endl;
+    // std::cout << buffer_.size();
+    // std::cout << "[DataBuffer] : " << toStringAll() << std::endl;
 }
 
 void DataBuffer::setData(buffer_data_t jsonData) {
@@ -56,7 +61,7 @@ std::string DataBuffer::extractNextJson() {
     // 1. Use findJsonBoundary() to locate a complete JSON object
     // 2. Extract it from buffer_
     // 3. Remove extracted substring from buffer_
-    return {};
+    return toString(extractNextBuffer());
 }
 
 size_t DataBuffer::findJsonBoundary() const {
@@ -80,13 +85,13 @@ bool DataBuffer::decodeJson(const std::string& jsonStr /*, ParsedData &out */) {
     return false;
 }
 
-bool DataBuffer::parseNextJson(/* ParsedData &out */) {
+std::string DataBuffer::parseNextJson(/* ParsedData &out */) {
     // TODO:
     // 1. Use extractNextJson() to get next complete object
     // 2. Validate using isValidJson()
     // 3. Decode using decodeJson()
     // 4. Return true if parsed successfully
-    return false;
+    return "";
 }
 
 void DataBuffer::parseAll(/* std::vector<ParsedData> &out */) {
@@ -105,14 +110,14 @@ std::string DataBuffer::toString(const buffer_data_t& buffer_item) {
     bool hasB = buffer_item.b != '\0';
 
     if (hasA) {
-        temp = temp + "\"" + buffer_item.a + "\": " + std::to_string(buffer_item.a_data);
+        temp = temp + "\"" + std::to_string(buffer_item.a) + "\": " + std::to_string(buffer_item.a_data);
         if (hasB) {
             temp += ", ";
         }
     }
 
     if (hasB) {
-        temp = temp + "\"" + buffer_item.b + "\": " + std::to_string(buffer_item.b_data);
+        temp = temp + "\"" + std::to_string(buffer_item.b) + "\": " + std::to_string(buffer_item.b_data);
     }
 
     temp += "}";
@@ -123,8 +128,8 @@ std::string DataBuffer::toStringAll() {
     //print all buffer_ as string
     //buffer_ is an array of buffer_data_t
     std::string res = "";
-
-    for (buffer_data_t buffer_item : buffer_) {
+    
+    for (buffer_data_t buffer_item : readAll()) {
         res += toString(buffer_item) + ",\n";
     }
     return res;
