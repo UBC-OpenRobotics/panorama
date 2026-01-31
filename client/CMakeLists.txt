@@ -6,7 +6,18 @@ set(CLIENT_SOURCES
     src/argparser.cpp
     src/message_model.cpp
     src/tcp_client.cpp
+    src/json_reader.cpp
+    src/DataBuffer.cpp
+    src/graph_panel.cpp
     src/sensor_manager.cpp
+    src/config_manager.cpp
+    src/data_logger.cpp
+    src/settings_dialog.cpp
+)
+
+set(COMMON_HEADERS
+    include/common/panorama_defines.hpp
+    include/common/panorama_utils.hpp
 )
 
 set(CLIENT_HEADERS
@@ -14,23 +25,35 @@ set(CLIENT_HEADERS
     include/client/argparser.hpp
     include/client/message_model.hpp
     include/client/tcp_client.hpp
+    include/client/json_reader.hpp
+    include/client/DataBuffer.hpp
+    include/client/sensor_manager.hpp
+    include/client/sensor_data_panel.h
+    include/client/graph_panel.hpp
+    include/client/config_manager.hpp
+    include/client/data_logger.hpp
+    include/client/settings_dialog.hpp
 )
 
 add_subdirectory(external/wxMathPlot_0.2.0/mathplot)
 
 # Executable settings
 if(WIN32)
-    add_executable(panorama-client WIN32 ${CLIENT_SOURCES} ${CLIENT_HEADERS} "src/sensor_manager.cpp" "src/graph_panel.cpp"  )
+    add_executable(panorama-client WIN32 ${CLIENT_SOURCES} ${COMMON_HEADERS} ${CLIENT_HEADERS})
 elseif(APPLE)
-    add_executable(panorama-client MACOSX_BUNDLE ${CLIENT_SOURCES} ${CLIENT_HEADERS})
+    add_executable(panorama-client MACOSX_BUNDLE ${CLIENT_SOURCES} ${COMMON_HEADERS} ${CLIENT_HEADERS})
 else()
-    add_executable(panorama-client ${CLIENT_SOURCES} ${CLIENT_HEADERS})
+    add_executable(panorama-client ${CLIENT_SOURCES} ${COMMON_HEADERS} ${CLIENT_HEADERS})
 endif()
 
 # Panorama Includes
 target_include_directories(panorama-client
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
+
+# SQLite3 - Required for config database
+find_package(SQLite3 REQUIRED)
+target_link_libraries(panorama-client PRIVATE SQLite::SQLite3)
 
 if(WIN32)
     target_link_libraries(panorama-client PRIVATE ws2_32)

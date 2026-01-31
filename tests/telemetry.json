@@ -1,0 +1,17 @@
+{
+  "temperature": [
+    {"time": "1", "t ambient": "20", "t cpu": "40"},
+    {"time": "2", "t ambient": "21", "t cpu": "39"},
+    {"time": "3", "t ambient": "22", "t cpu": "40"}
+  ],
+  "battery-voltage": [
+    {"time": "1", "voltage": "2048"},
+    {"time": "2", "voltage": "2048"},
+    {"time": "3", "voltage": "2048"}
+  ],
+  "error-codes": [
+    {"time": "1", "error": "53003"},
+    {"time": "50", "error": "403"},
+    {"time": "200", "error": "405"}
+  ]
+}

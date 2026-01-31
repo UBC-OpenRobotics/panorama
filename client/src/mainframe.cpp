@@ -42,17 +42,19 @@ MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
     consolePanel->SetSizer(consoleSizer);
 
     // Assemble splitters
-    rightSplitter->SplitHorizontally(dataViewPanel, graphPanel, 200);
-    rightSplitter->SetMinimumPaneSize(50);  
+    rightSplitter->SplitHorizontally(dataViewPanel, graphPanel, 180);
+    rightSplitter->SetMinimumPaneSize(100);
+    rightSplitter->SetSashGravity(0.0); // keeps data panel a 180px, graph takes extra space
     
     topSplitter->SplitVertically(sensorPanel, rightSplitter, 200);
     topSplitter->SetMinimumPaneSize(100);
+    topSplitter->SetSashGravity(0.0); 
 
     int windowHeight = size.GetHeight();
     int consoleHeight = 150; // fixed height
     mainSplitter->SplitHorizontally(topSplitter, consolePanel, -150);
     mainSplitter->SetMinimumPaneSize(50);
-    mainSplitter->SetSashGravity(1.0);
+    mainSplitter->SetSashGravity(1.0); // keeps console constant at 150px
     
     // Layout
     wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);

@@ -1,7 +1,11 @@
 #include "client/tcp_client.hpp"
 #include "client/message_model.hpp"
+#include "client/data_logger.hpp"
+#include "common/panorama_utils.hpp"
 #include <cstring>
 #include <chrono>
+
+#include "client/json_reader.hpp"
 
 #ifdef _WIN32
     #include <winsock2.h>
@@ -21,8 +25,8 @@
     #define SOCKET_ERROR -1
 #endif
 
-TcpClient::TcpClient(const std::string& host, int port, std::shared_ptr<MessageModel> model)
-    : host_(host), port_(port), model_(model), running_(false), socket_(INVALID_SOCKET) {
+TcpClient::TcpClient(const std::string& host, int port, std::shared_ptr<MessageModel> model, std::shared_ptr<DataLogger> logger)
+    : host_(host), port_(port), model_(model), logger_(logger), running_(false), socket_(INVALID_SOCKET) {
 #ifdef _WIN32
     WSADATA wsaData;
     WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -68,7 +72,7 @@ void TcpClient::run() {
             std::this_thread::sleep_for(std::chrono::seconds(5));
             continue;
         }
-        
+        JsonReader reader = JsonReader();
         // Read data from server
         char buffer[4096];
         while (running_) {
@@ -80,7 +84,18 @@ void TcpClient::run() {
             }
             
             buffer[bytesRead] = '\0';
-            model_->addMessage("Received: " + std::string(buffer));
+            std::string received(buffer);
+
+            // Log raw data to file
+            if (logger_) {
+                logger_->logJsonData(received);
+            }
+
+            // print json
+            //pinfo("Received JSON: ", received);
+            reader.exportToBuffer(received);
+
+            model_->addMessage("Received: " + received);
         }
     }
 }
