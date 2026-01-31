@@ -16,6 +16,8 @@ set(CLIENT_HEADERS
     include/client/tcp_client.hpp
 )
 
+add_subdirectory(external/wxMathPlot_0.2.0/mathplot)
+
 # Executable settings
 if(WIN32)
     add_executable(panorama-client WIN32 ${CLIENT_SOURCES} ${CLIENT_HEADERS} "src/sensor_manager.cpp" "src/graph_panel.cpp"  )
