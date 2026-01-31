@@ -6,6 +6,7 @@
 #include <sstream>
 #include <vector>
 #include <string>
+#include <ctime>
 
 JsonReader::JsonReader() {}
 
@@ -65,17 +66,12 @@ buffer_data_t JsonReader::exportToBuffer(std::string json) {
         doc["unit"].GetString(),
         doc["unit"].GetStringLength()
     );
-
     double sensorValue = doc["value"].GetDouble();
-    
-   // std::cout << sensorTypeString << sensorValue << sensorUnitString << std::endl;
-    if (sensorTypeString == "temperature") {
-        ret.a = 'a';
-        ret.a_data = sensorValue;
-    } else {
-        ret.b_data = sensorValue;
-        ret.b = 'b';
-    }
+
+    ret.datatype = sensorTypeString.c_str();
+    ret.data = sensorValue;
+    ret.dataunit = sensorUnitString.c_str();
+    ret.timestamp = std::time(&ret.timestamp);
 
     return ret;
 

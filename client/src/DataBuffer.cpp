@@ -107,19 +107,19 @@ std::string DataBuffer::toString(const buffer_data_t& buffer_item) {
     std::string temp = "{";
 
     // 
-    bool hasA = buffer_item.a != '\0';
-    bool hasB = buffer_item.b != '\0';
+    // bool hasA = buffer_item.a != '\0';
+    // bool hasB = buffer_item.b != '\0';
 
-    if (hasA) {
-        temp = temp + "\"" + std::to_string(buffer_item.a) + "\": " + std::to_string(buffer_item.a_data);
-        if (hasB) {
-            temp += ", ";
-        }
-    }
+    // if (hasA) {
+    //     temp = temp + "\"" + std::to_string(buffer_item.a) + "\": " + std::to_string(buffer_item.a_data);
+    //     if (hasB) {
+    //         temp += ", ";
+    //     }
+    // }
 
-    if (hasB) {
-        temp = temp + "\"" + std::to_string(buffer_item.b) + "\": " + std::to_string(buffer_item.b_data);
-    }
+    // if (hasB) {
+    //     temp = temp + "\"" + std::to_string(buffer_item.b) + "\": " + std::to_string(buffer_item.b_data);
+    // }
 
     temp += "}";
     return temp;
