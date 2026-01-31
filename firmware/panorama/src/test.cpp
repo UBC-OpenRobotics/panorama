@@ -1,155 +1,158 @@
-#include <WiFi.h>
+// #include <WiFi.h>
 
 
-/*
-Alex: suggestions
-#include "esp_http_server.h"
-#include "esp_timer.h"
-#include "Arduino.h"
-#include "lwip/sockets.h"       
-#include <sys/param.h>
-#include <stdlib.h>
-#include <string.h>
+// /*
+// Alex: suggestions
+// #include "esp_http_server.h"
+// #include "esp_timer.h"
+// #include "Arduino.h"
+// #include "lwip/sockets.h"       
+// #include <sys/param.h>
+// #include <stdlib.h>
+// #include <string.h>
 
-String WiFiAddr;
-
-
-typedef struct {
-  httpd_req_t *req;
-  size_t len;
-} export_data_t;
+// String WiFiAddr;
 
 
-*/
+// typedef struct {
+//   httpd_req_t *req;
+//   size_t len;
+// } export_data_t;
+
+
+// */
 
 
 
-// Wi-Fi Access Point credentials
-const char* SSID = "ESP32-Interface";
-const char* PASS = "12345678";
-const uint16_t PORT = 9000;
+// // Wi-Fi Access Point credentials
+// const char* SSID = "ESP32-Interface";
+// const char* PASS = "12345678";
+// const uint16_t PORT = 9000;
 
-WiFiServer server(PORT);
-WiFiClient client;
+// WiFiServer server(PORT);
+// WiFiClient client;
 
-bool sendEnabled = false;
-unsigned long sampleInterval = 1000; // ms
-unsigned long lastSend = 0;
-unsigned long startTime = 0;
+// bool sendEnabled = false;
+// unsigned long sampleInterval = 1000; // ms
+// unsigned long lastSend = 0;
+// unsigned long startTime = 0;
 
-uint32_t seq = 0;
-const uint16_t SENSOR_ID = 1;
-const char* SENSOR_NAME = "temperature";
+// // uint32_t seq = 0;
+// const uint16_t SENSOR_ID = 1;
+// const char* SENSOR_NAME = "temperature";
 
-void setup() {
-  Serial.begin(115200);
+// const uint16_t SENSOR_ID = 2;
+// const char* SENSOR_NAME = "ultrasonic";
 
-  WiFi.mode(WIFI_AP);
-  WiFi.softAP(SSID, PASS);
-  IPAddress ip = WiFi.softAPIP();
-  Serial.printf("AP started: %s (%s)\n", SSID, ip.toString().c_str());
+// void setup() {
+//   Serial.begin(115200);
 
-  server.begin();
-  server.setNoDelay(true);
-}
+//   WiFi.mode(WIFI_AP);
+//   WiFi.softAP(SSID, PASS);
+//   IPAddress ip = WiFi.softAPIP();
+//   Serial.printf("AP started: %s (%s)\n", SSID, ip.toString().c_str());
 
-void handleCommand(String cmd) {
-  cmd.trim();
-  cmd.toUpperCase();
+//   server.begin();
+//   server.setNoDelay(true);
+// }
 
-  if (cmd.startsWith("START")) {
-    int spaceIdx = cmd.indexOf(' ');
-    if (spaceIdx > 0) {
-      float freq = cmd.substring(spaceIdx + 1).toFloat();
-      if (freq > 0) sampleInterval = 1000.0 / freq;
-    }
-    startTime = millis();
-    seq = 0;              // reset sequence on start
-    sendEnabled = true;
-    Serial.printf("Signal ON, freq=%.1f Hz\n", 1000.0 / sampleInterval);
+// void handleCommand(String cmd) {
+//   cmd.trim();
+//   cmd.toUpperCase();
 
-  } else if (cmd.startsWith("STOP")) {
-    sendEnabled = false;
-    Serial.println("Signal OFF");
+//   if (cmd.startsWith("START")) {
+//     int spaceIdx = cmd.indexOf(' ');
+//     if (spaceIdx > 0) {
+//       float freq = cmd.substring(spaceIdx + 1).toFloat();
+//       if (freq > 0) sampleInterval = 1000.0 / freq;
+//     }
+//     startTime = millis();
+//     // seq = 0;              // reset sequence on start
+//     sendEnabled = true;
+//     Serial.printf("Signal ON, freq=%.1f Hz\n", 1000.0 / sampleInterval);
 
-  } else {
-    Serial.printf("Unknown cmd: %s\n", cmd.c_str());
-  }
-}
+//   } else if (cmd.startsWith("STOP")) {
+//     sendEnabled = false;
+//     Serial.println("Signal OFF");
 
-/*
-We can look into using URIs to distinguish between different types of cmds and host different types of data
+//   } else {
+//     Serial.printf("Unknown cmd: %s\n", cmd.c_str());
+//   }
+// }
 
-static size_t encode_export_data_stream(void* arg, size_t index, const void* data, size_t len) {
-  export_data_t *d = (export_data_t *) arg;
-  if (!index) {
-    d->len = 0; 
-  }
-  if (httpd_resp_send_chunk(d->req, (const char *)data, len) != ESP_OK){
-    return 0;
-  }
-  d->len += len;
-  return len;
-}
+// /*
+// We can look into using URIs to distinguish between different types of cmds and host different types of data
 
-
-static esp_err_t capture_handler(httpd_req_t *req) {
-  esp_err_t res = ESP_OK;
-  int64_t chunk_start_time = esp_timer_get_time();
-
-  httpd_resp_set_type(req, "data/json");
-
-  // get local buffer
-
-  // if buffer size == the size we define
-    // res = httpd_resp_send(..);
-  // else 
-  //  httpd_resp_send_chunk(..);
-
-  return res // result from httpd_resp_send(...)
-}
+// static size_t encode_export_data_stream(void* arg, size_t index, const void* data, size_t len) {
+//   export_data_t *d = (export_data_t *) arg;
+//   if (!index) {
+//     d->len = 0; 
+//   }
+//   if (httpd_resp_send_chunk(d->req, (const char *)data, len) != ESP_OK){
+//     return 0;
+//   }
+//   d->len += len;
+//   return len;
+// }
 
 
-*/
+// static esp_err_t capture_handler(httpd_req_t *req) {
+//   esp_err_t res = ESP_OK;
+//   int64_t chunk_start_time = esp_timer_get_time();
+
+//   httpd_resp_set_type(req, "data/json");
+
+//   // get local buffer
+
+//   // if buffer size == the size we define
+//     // res = httpd_resp_send(..);
+//   // else 
+//   //  httpd_resp_send_chunk(..);
+
+//   return res // result from httpd_resp_send(...)
+// }
 
 
-void loop() {
-  // accept new client
-  WiFiClient newClient = server.available();
-  if (newClient) {
-    if (client && client.connected()) client.stop();
-    client = newClient;
-    client.print("{\"type\":\"status\",\"msg\":\"connected\"}\n");
-    Serial.println("Backend connected");
-  }
+// */
 
-  // read commands
-  if (client && client.connected() && client.available()) {
-    String cmd = client.readStringUntil('\n');
-    handleCommand(cmd);
-  }
 
-  // send JSON data packets
-  if (sendEnabled && client && client.connected()) {
-    unsigned long now = millis();
-    if (now - lastSend >= sampleInterval) {
-      lastSend = now;
+// void loop() {
+//   // accept new client
+//   WiFiClient newClient = server.available();
+//   if (newClient) {
+//     if (client && client.connected()) client.stop();
+//     client = newClient;
+//     client.print("{\"type\":\"status\",\"msg\":\"connected\"}\n");
+//     Serial.println("Backend connected");
+//   }
 
-      float sensorVal = random(0, 1000) / 10.0;
-      unsigned long timestamp = now - startTime;
+//   // read commands
+//   if (client && client.connected() && client.available()) {
+//     String cmd = client.readStringUntil('\n');
+//     handleCommand(cmd);
+//   }
 
-      String json =
-        "{"
-          "\"sensor\":\"" + String(SENSOR_NAME) + "\","
-          "\"sensor_id\":" + String(SENSOR_ID) + ","
-          "\"seq\":" + String(seq++) + ","
-          "\"timestamp_ms\":" + String(timestamp) + ","
-          "\"value\":" + String(sensorVal, 2) +
-        "}\n";
+//   // send JSON data packets
+//   if (sendEnabled && client && client.connected()) {
+//     unsigned long now = millis();
+//     if (now - lastSend >= sampleInterval) {
+//       lastSend = now;
 
-      client.print(json);
-      Serial.print("Sent: ");
-      Serial.print(json);
-    }
-  }
-}
+//       float sensorVal = random(0, 1000) / 10.0;
+//       unsigned long timestamp = now - startTime;
+
+//       String json =
+//         "{"
+//           "\"sensor\":\"" + String(SENSOR_NAME) + "\","
+//           "\"sensor_id\":" + String(SENSOR_ID) + ","
+//           // "\"seq\":" + String(seq++) + ","
+//           "\"timestamp_ms\":" + String(timestamp) + ","
+//           "\"value\":" + String(sensorVal, 2) +
+//         "}\n";
+
+//       client.print(json);
+//       Serial.print("Sent: ");
+//       Serial.print(json);
+//     }
+//   }
+// }
