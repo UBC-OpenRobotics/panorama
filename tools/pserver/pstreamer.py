@@ -63,6 +63,8 @@ class PStreamer:
                 # Wait for the specified interval or until stop is requested
                 self._stop_event.wait(timeout=self.stream_interval)
 
+                #print(data)
+
         except Exception as e:
             print(f"[PStreamer] Error in stream worker: {e}")
         finally:

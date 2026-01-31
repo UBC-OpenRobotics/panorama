@@ -10,8 +10,8 @@
 
 // #endif
 
-#ifndef PANORAMA_UTILS_HPP
-#define PANORAMA_UTILS_HPP
+#ifndef __PANORAMA_UTILS_HPP__
+#define __PANORAMA_UTILS_HPP__
 
 #include <iostream>
 
@@ -22,4 +22,11 @@ void pinfo(const Args&... args) {
     std::cout << std::endl;
 }
 
-#endif // PANORAMA_UTILS_HPP
+template <typename... Args>
+void pdebug(const Args&... args) {
+    std::cout << "[DEBUG][Client]\t";
+    (std::cout << ... << args);   // fold expression over operator<<
+    std::cout << std::endl;
+}
+
+#endif // __PANORAMA_UTILS_HPP__
