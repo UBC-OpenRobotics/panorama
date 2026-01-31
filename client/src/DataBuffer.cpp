@@ -102,26 +102,23 @@ void DataBuffer::parseAll(/* std::vector<ParsedData> &out */) {
     //     parseNextJson(...)
 }
 
+
 std::string DataBuffer::toString(const buffer_data_t& buffer_item) {
     //convert one struct of buffer_ into string
+    bool hasUnit = buffer_item.dataunit != '\0';
+
     std::string temp = "{";
 
-    // 
-    // bool hasA = buffer_item.a != '\0';
-    // bool hasB = buffer_item.b != '\0';
+    temp = temp + "\"datatype\": \"" + buffer_item.datatype + "\", \"data\": " + std::to_string(buffer_item.data) + ", ";
 
-    // if (hasA) {
-    //     temp = temp + "\"" + std::to_string(buffer_item.a) + "\": " + std::to_string(buffer_item.a_data);
-    //     if (hasB) {
-    //         temp += ", ";
-    //     }
-    // }
-
-    // if (hasB) {
-    //     temp = temp + "\"" + std::to_string(buffer_item.b) + "\": " + std::to_string(buffer_item.b_data);
-    // }
+    if (hasUnit) {
+        temp = temp + "\"dataunit\": \"" + buffer_item.dataunit + "\", ";
+    }
+    
+    temp = temp + "\"timestamp\": " + std::to_string(buffer_item.timestamp);
 
     temp += "}";
+
     return temp;
 }
 
