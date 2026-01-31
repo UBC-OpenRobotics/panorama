@@ -28,7 +28,6 @@ set(CLIENT_HEADERS
     include/client/json_reader.hpp
     include/client/DataBuffer.hpp
     include/client/sensor_manager.hpp
-    include/client/sensor_data_panel.h
     include/client/graph_panel.hpp
     include/client/config_manager.hpp
     include/client/data_logger.hpp
