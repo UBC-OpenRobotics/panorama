@@ -26,40 +26,60 @@ public:
         std::string runtimeDir = config.getConfig("runtime_directory");
 
         if (runtimeDir.empty()) {
-            // No saved directory, need to select one
-            if (!parser.isNoGuiMode()) {
-                // GUI mode: Show directory selection dialog
-                wxDirDialog dirDialog(nullptr, "Select Panorama Runtime Directory",
-                                     wxStandardPaths::Get().GetDocumentsDir(),
-                                     wxDD_DEFAULT_STYLE | wxDD_DIR_MUST_EXIST);
+            // TODO: To be implemented later:
+            // if (!parser.isNoGuiMode()) {
+            //     // GUI mode: Show directory selection dialog
+            //     wxDirDialog dirDialog(nullptr, "Select Panorama Runtime Directory",
+            //                          wxStandardPaths::Get().GetDocumentsDir(),
+            //                          wxDD_DEFAULT_STYLE | wxDD_DIR_MUST_EXIST);
 
-                if (dirDialog.ShowModal() == wxID_CANCEL) {
-                    wxMessageBox("Runtime directory is required to start Panorama.",
-                                "Directory Required", wxOK | wxICON_ERROR);
+            //     if (dirDialog.ShowModal() == wxID_CANCEL) {
+            //         wxMessageBox("Runtime directory is required to start Panorama.",
+            //                     "Directory Required", wxOK | wxICON_ERROR);
+            //         return false;
+            //     }
+
+            //     runtimeDir = dirDialog.GetPath().ToStdString();
+            // } else {
+            //     // This is for testing (No-GUI mode): Use command-line argument or default
+            //     runtimeDir = parser.getRuntimeDirectory();
+            //     if (runtimeDir.empty()) {
+            //         // Use default directory
+            //         wxString homeDir = wxStandardPaths::Get().GetDocumentsDir();
+            //         runtimeDir = homeDir.ToStdString() + "/panorama_data";
+
+            //         // Create default directory if it doesn't exist
+            //         try {
+            //             std::filesystem::create_directories(runtimeDir);
+            //         } catch (const std::exception& e) {
+            //             std::cerr << "Failed to create default runtime directory: " << runtimeDir << std::endl;
+            //             std::cerr << "Error: " << e.what() << std::endl;
+            //             return false;
+            //         }
+            //     }
+
+            //     std::cout << "Using runtime directory: " << runtimeDir << std::endl;
+            // }
+            
+            // ASSUME panorama/rundir FOR NOW
+            runtimeDir = parser.getRuntimeDirectory();
+            if (runtimeDir.empty()) {
+
+                // wxString homeDir = wxStandardPaths::Get().GetDocumentsDir();
+                // runtimeDir = homeDir.ToStdString() + "/rundir"; // <=== THIS IS HARDCODED FOR NOW
+                std::filesystem::path sourceDir = std::filesystem::path(__FILE__).parent_path();
+                runtimeDir = (sourceDir / ".." / ".." / "rundir").lexically_normal().string();
+
+                try {
+                    std::filesystem::create_directories(runtimeDir);
+                } catch (const std::exception& e) {
+                    std::cerr << "Failed to create default runtime directory: " << runtimeDir << std::endl;
+                    std::cerr << "Error: " << e.what() << std::endl;
                     return false;
                 }
-
-                runtimeDir = dirDialog.GetPath().ToStdString();
-            } else {
-                // No-GUI mode: Use command-line argument or default
-                runtimeDir = parser.getRuntimeDirectory();
-                if (runtimeDir.empty()) {
-                    // Use default directory
-                    wxString homeDir = wxStandardPaths::Get().GetDocumentsDir();
-                    runtimeDir = homeDir.ToStdString() + "/panorama_data";
-
-                    // Create default directory if it doesn't exist
-                    try {
-                        std::filesystem::create_directories(runtimeDir);
-                    } catch (const std::exception& e) {
-                        std::cerr << "Failed to create default runtime directory: " << runtimeDir << std::endl;
-                        std::cerr << "Error: " << e.what() << std::endl;
-                        return false;
-                    }
-                }
-
-                std::cout << "Using runtime directory: " << runtimeDir << std::endl;
             }
+
+            std::cout << "Using runtime directory: " << runtimeDir << std::endl;
 
             // Set runtime directory in ConfigManager
             if (!config.setRuntimeDirectory(runtimeDir)) {
