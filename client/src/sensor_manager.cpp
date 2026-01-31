@@ -1,5 +1,6 @@
 #include <wx/wx.h>
 #include <client/sensor_manager.hpp>
+#include "client/settings_dialog.hpp"
 
 SensorManagerPanel::SensorManagerPanel(wxWindow* parent)
 	: wxPanel(parent, wxID_ANY)
@@ -56,5 +57,6 @@ void SensorManagerPanel::OnAddData(wxCommandEvent& event) {
 }
 
 void SensorManagerPanel::OnSettings(wxCommandEvent& event) {
-	wxLogMessage("Settings button clicked!");
+	SettingsDialog dialog(this);
+	dialog.ShowModal();
 }

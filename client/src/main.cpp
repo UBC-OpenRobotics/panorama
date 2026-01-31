@@ -1,11 +1,16 @@
 #include <wx/wx.h>
 #include <wx/timer.h>
+#include <wx/dirdlg.h>
+#include <wx/stdpaths.h>
 #include <memory>
+#include <filesystem>
 #include "client/mainframe.hpp"
 #include "client/argparser.hpp"
 #include "client/message_model.hpp"
 #include "client/tcp_client.hpp"
-#include "client/json_reader.hpp" 
+#include "client/json_reader.hpp"
+#include "client/config_manager.hpp"
+#include "client/data_logger.hpp"
 #include <iostream>
 using namespace std;
 
@@ -14,29 +19,99 @@ public:
     virtual bool OnInit() override {
         ArgParser parser(argc, argv);
 
-        // --- Load JSON data at startup ---
-        // JsonReader reader("example.json");
-        // if (!reader.parse()) {
-        //     wxLogError("Failed to parse data.json");
-        //     return false; // stop app if JSON fails
-        // }
+        // --- Runtime Directory Selection ---
+        ConfigManager& config = ConfigManager::getInstance();
 
-        // const auto& doc = reader.getDocument();
+        // Check if runtime directory is already set from previous launch
+        std::string runtimeDir = config.getConfig("runtime_directory");
 
-        // const rapidjson::Value& array = doc["cats"];
+        if (runtimeDir.empty()) {
+            // No saved directory, need to select one
+            if (!parser.isNoGuiMode()) {
+                // GUI mode: Show directory selection dialog
+                wxDirDialog dirDialog(nullptr, "Select Panorama Runtime Directory",
+                                     wxStandardPaths::Get().GetDocumentsDir(),
+                                     wxDD_DEFAULT_STYLE | wxDD_DIR_MUST_EXIST);
 
-        // for (const auto& item : array.GetArray()) {
-        //     cout << "Type: " << item["type"].GetString() << " | Age: ";
-        //     cout << item["age"].GetInt() << " | Color: ";
-        //     cout << item["color"].GetString() << "\n";
-        // }
+                if (dirDialog.ShowModal() == wxID_CANCEL) {
+                    wxMessageBox("Runtime directory is required to start Panorama.",
+                                "Directory Required", wxOK | wxICON_ERROR);
+                    return false;
+                }
 
+                runtimeDir = dirDialog.GetPath().ToStdString();
+            } else {
+                // No-GUI mode: Use command-line argument or default
+                runtimeDir = parser.getRuntimeDirectory();
+                if (runtimeDir.empty()) {
+                    // Use default directory
+                    wxString homeDir = wxStandardPaths::Get().GetDocumentsDir();
+                    runtimeDir = homeDir.ToStdString() + "/panorama_data";
+
+                    // Create default directory if it doesn't exist
+                    try {
+                        std::filesystem::create_directories(runtimeDir);
+                    } catch (const std::exception& e) {
+                        std::cerr << "Failed to create default runtime directory: " << runtimeDir << std::endl;
+                        std::cerr << "Error: " << e.what() << std::endl;
+                        return false;
+                    }
+                }
+
+                std::cout << "Using runtime directory: " << runtimeDir << std::endl;
+            }
+
+            // Set runtime directory in ConfigManager
+            if (!config.setRuntimeDirectory(runtimeDir)) {
+                if (!parser.isNoGuiMode()) {
+                    wxMessageBox("Failed to initialize runtime directory.",
+                                "Error", wxOK | wxICON_ERROR);
+                } else {
+                    std::cerr << "Failed to initialize runtime directory: " << runtimeDir << std::endl;
+                }
+                return false;
+            }
+
+            // Initialize database
+            if (!config.initializeDatabase()) {
+                if (!parser.isNoGuiMode()) {
+                    wxMessageBox("Failed to initialize configuration database.",
+                                "Error", wxOK | wxICON_ERROR);
+                } else {
+                    std::cerr << "Failed to initialize configuration database" << std::endl;
+                }
+                return false;
+            }
+        } else {
+            // Runtime directory was saved, use it
+            if (!config.setRuntimeDirectory(runtimeDir)) {
+                // Saved directory is no longer valid, clear it and restart
+                config.saveConfig("runtime_directory", "");
+                if (!parser.isNoGuiMode()) {
+                    wxMessageBox("Saved runtime directory is no longer accessible. Please select a new directory.",
+                                "Directory Not Accessible", wxOK | wxICON_WARNING);
+                }
+                return false;
+            }
+
+            // Open existing database
+            if (!config.initializeDatabase()) {
+                std::cerr << "Failed to open configuration database" << std::endl;
+                return false;
+            }
+        }
 
         // --- Create model (shared between view and controller) ---
         model_ = std::make_shared<MessageModel>();
 
+        // --- Create DataLogger ---
+        dataLogger_ = std::make_shared<DataLogger>(config.getDataLogPath());
+        if (!dataLogger_->isOpen()) {
+            std::cerr << "Warning: Data logger failed to initialize. Data will not be persisted." << std::endl;
+        }
+
         // --- Create and start TCP client on separate thread ---
-        tcpClient_ = std::make_unique<TcpClient>("127.0.0.1", 3000, model_);
+        tcpClient_ = std::make_unique<TcpClient>("127.0.0.1", 3000, model_, dataLogger_);
         tcpClient_->start();
 
         // For running without a gui
@@ -77,6 +152,7 @@ public:
 
 private:
     std::shared_ptr<MessageModel> model_;
+    std::shared_ptr<DataLogger> dataLogger_;
     std::unique_ptr<TcpClient> tcpClient_;
 };
 

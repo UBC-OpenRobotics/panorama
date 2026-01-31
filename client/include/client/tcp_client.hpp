@@ -5,10 +5,11 @@
 #include <memory>
 
 class MessageModel;
+class DataLogger;
 
 class TcpClient {
 public:
-    TcpClient(const std::string& host, int port, std::shared_ptr<MessageModel> model);
+    TcpClient(const std::string& host, int port, std::shared_ptr<MessageModel> model, std::shared_ptr<DataLogger> logger = nullptr);
     ~TcpClient();
     
     void start();
@@ -22,6 +23,7 @@ private:
     std::string host_;
     int port_;
     std::shared_ptr<MessageModel> model_;
+    std::shared_ptr<DataLogger> logger_;
     std::atomic<bool> running_;
     std::thread clientThread_;
     
