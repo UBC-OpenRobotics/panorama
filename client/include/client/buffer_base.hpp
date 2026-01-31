@@ -98,5 +98,5 @@ public:
 protected:
     std::list<T> buffer_;
     mutable std::mutex mutex_;
-    int MAX_BUFFER_SIZE = 2;
+    int MAX_BUFFER_SIZE = 5;
 };

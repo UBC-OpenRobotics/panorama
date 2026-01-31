@@ -96,7 +96,7 @@ void MainFrame::updateMessageDisplay() {
     }
 
     if (dataBuffer_->size() > 0) {
-        std::cout << dataBuffer_->toStringAll();
+        //std::cout << dataBuffer_->toStringAll();
         text += "\n--- DataBuffer Contents ---\n";
         text += wxString::FromUTF8(dataBuffer_->toStringAll());
         text += "--- End of DataBuffer ---\n";

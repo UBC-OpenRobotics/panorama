@@ -37,6 +37,7 @@ public:
     // Clear the buffer
     void clear();
 
+
     // Extract the next complete JSON object from buffer
     // Removes extracted portion from buffer
     std::string extractNextJson();
@@ -58,6 +59,8 @@ public:
     std::string toString(const buffer_data_t& item);
 
     std::string toStringAll();
+
+    void exportBuffer();
 
 private:
     // Raw buffer storing incoming data

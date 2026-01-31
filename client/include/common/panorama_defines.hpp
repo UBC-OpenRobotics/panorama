@@ -1,8 +1,10 @@
 #pragma once
+#include <ctime>
 
 typedef struct {
-    char a;
-    float a_data;
-    char b;
-    float b_data;
+    float data;
+    char datatype;
+    std::time_t timestamp;
+    char dataunit;
+
 } buffer_data_t;   

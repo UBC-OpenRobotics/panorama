@@ -19,8 +19,9 @@ void DataBuffer::writeData(buffer_data_t jsonChunk) {
    // std::cout << "[DataBuffer]   Buffer size before write: " << size() << std::endl;
 
     write(jsonChunk);
-    if (size() >= MAX_BUFFER_SIZE) {
+    if (size() > MAX_BUFFER_SIZE) {
         popFront();
+        exportBuffer();
     }
     // std::cout << "[DataBuffer]   Buffer size after write: " << size() << std::endl;
     // std::cout << buffer_.size();
@@ -128,9 +129,31 @@ std::string DataBuffer::toStringAll() {
     //print all buffer_ as string
     //buffer_ is an array of buffer_data_t
     std::string res = "";
-    
+    int c = 0;
     for (buffer_data_t buffer_item : readAll()) {
-        res += toString(buffer_item) + ",\n";
+        if (c == size() - 1) {
+            res += toString(buffer_item) + "\n";
+        } else {
+            res += toString(buffer_item) + ",\n";
+        }
+        
+        c++;
     }
+
     return res;
+}
+
+void DataBuffer::exportBuffer() {
+    //Export the entire buffer (make a local JSON file under client/src/)
+    FILE* fp = fopen("./example.json", "w");
+    if (!fp) {
+		std::cerr << "Could not open file for writing exported buffer." << std::endl;
+        return;
+    }
+    
+    std::string json_content = "[\n" + toStringAll() + "]";
+    //std::cout << "JSON CONTENT: " << json_content << std::endl;
+    fputs(json_content.c_str(), fp);
+    fclose(fp);
+    return;
 }
