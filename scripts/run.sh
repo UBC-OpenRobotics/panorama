@@ -16,12 +16,15 @@ for arg in "$@"; do
         -noesp)
             NOESP=true
             ;;
+        -pserver)
+            NOESP=true
+            ;;
         -nogui)
             NOGUI=true
             ;;
         -*)
             echo "run.sh: [ERROR] Unknown flag: $arg"
-            echo "Usage: run.sh [-noesp] [-nogui]"
+            echo "Usage: run.sh [-noesp|-pserver] [-nogui]"
             echo "  -noesp: Run client and launch Python JSON server instead of ESP32"
             echo "  -nogui: Run client without GUI (console mode)"
             exit 1
