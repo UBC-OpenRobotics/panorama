@@ -7,7 +7,7 @@ class PStreamJSON(PStreamBase):
     """JSON stream implementation that generates sensor data."""
 
     def __init__(self):
-        super().__init__()
+        super().__init__() #gives other methods access to the base class
         self.counter = 0
         self.sample_data = [
             {
@@ -48,8 +48,4 @@ class PStreamJSON(PStreamBase):
         self.counter += 1
 
         # Convert to JSON string with newline delimiter ('\n')
-        json_str = json.dumps(json_obj)
-        message = json_str + '\n'
-       
-
-        return message.encode('utf-8')
+        return (json.dumps(json_obj) + '\n').encode('utf-8') 

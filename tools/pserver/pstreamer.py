@@ -12,11 +12,11 @@ class PStreamer:
     and makes it available via a queue.
     """
 
-    def __init__(self):
+    def __init__(self, interval: float = 1.0):
         self.stream: Optional[PStreamBase] = None
         self.thread: Optional[threading.Thread] = None
         self._stop_event = threading.Event()
-        self.stream_interval = 1.0  # *** By Default: 1 second between data generation! ***
+        self.stream_interval = interval  # *** By Default: 1 second between data generation! ***
 
     def build_stream(self, stream: PStreamBase) -> 'PStreamer':
         """
@@ -46,8 +46,8 @@ class PStreamer:
 
     def _stream_worker(self):
         """Internal worker method that runs in a separate thread."""
-        if self.stream is None:
-            raise ValueError("Stream not built. Call build_stream() first.")
+        #if self.stream is None:
+            #raise ValueError("Stream not built. Call build_stream() first.")
 
         self.stream.start()
         print(f"[PStreamer] Stream thread started with {self.stream.__class__.__name__}")
@@ -84,7 +84,7 @@ class PStreamer:
 
     def stop(self):
         """Stop the streaming thread."""
-        if self.thread is None or not self.thread.is_alive():
+        if not self.is_running():
             print("[PStreamer] Stream not running")
             return
 

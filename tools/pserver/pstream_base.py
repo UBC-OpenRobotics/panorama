@@ -51,6 +51,6 @@ class PStreamBase(ABC):
     def get_data(self, timeout: Optional[float] = None) -> Optional[bytes]:
         """Get data from the queue."""
         try:
-            return self.data_queue.get(timeout=timeout)
+            return self.data_queue.get(timeout=timeout) #if timeout is None, it blocks until an item is available
         except queue.Empty:
             return None

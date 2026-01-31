@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 import socket
 import sys
+from tkinter import SE
 from putils import *
 from pstreamer import PStreamer
 from pstream_json import PStreamJSON
 
 class PServer:
-    def __init__(self):
-        self.verbose = 0
+    def __init__(self, host = "127.0.0.1", port = 3000):
+        self.host = host
+        self.port = port
 
     def send_stream(self, client_socket, client_address, streamer: PStreamer):
         """
@@ -29,7 +31,6 @@ class PServer:
                     continue
                 
                 client_socket.sendall(data)
-                #pinfo("PServer", f"Sent: {data.decode('utf-8').strip()}")
                 counter += 1
 
         except (BrokenPipeError, ConnectionResetError) as e:
@@ -39,10 +40,8 @@ class PServer:
         finally:
             client_socket.close()
 
-def main():
-    host = '127.0.0.1'
-    port = 3000
 
+def main():
     if len(sys.argv) > 1:
         port = int(sys.argv[1])
 
