@@ -11,6 +11,9 @@ set(CLIENT_SOURCES
     src/graph_panel.cpp
     src/sensor_manager.cpp
     src/sensor_data_panel.cpp
+    src/config_manager.cpp
+    src/data_logger.cpp
+    src/settings_dialog.cpp
 )
 
 set(COMMON_HEADERS
@@ -29,6 +32,9 @@ set(CLIENT_HEADERS
     include/client/sensor_manager.hpp
     include/client/sensor_data_panel.h
     include/client/graph_panel.hpp
+    include/client/config_manager.hpp
+    include/client/data_logger.hpp
+    include/client/settings_dialog.hpp
 )
 
 # Executable settings
@@ -44,6 +50,10 @@ endif()
 target_include_directories(panorama-client
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
+
+# SQLite3 - Required for config database
+find_package(SQLite3 REQUIRED)
+target_link_libraries(panorama-client PRIVATE SQLite::SQLite3)
 
 if(WIN32)
     target_link_libraries(panorama-client PRIVATE ws2_32)
