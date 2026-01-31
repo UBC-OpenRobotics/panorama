@@ -26,7 +26,7 @@
     #define SOCKET_ERROR -1
 #endif
 
-TcpClient::TcpClient(const std::string& host, int port, std::shared_ptr<MessageModel> model, std::shared_ptr<DataLogger> logger, std::shared_ptr<DataBuffer> dataBuffer)
+TcpClient::TcpClient(const std::string& host, int port, std::shared_ptr<MessageModel> model, std::shared_ptr<DataBuffer> dataBuffer, std::shared_ptr<DataLogger> logger)
     : host_(host), port_(port), model_(model), logger_(logger), dataBuffer_(dataBuffer), running_(false), socket_(INVALID_SOCKET) {
 #ifdef _WIN32
     WSADATA wsaData;
