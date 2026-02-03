@@ -2,6 +2,8 @@
 import json
 import time
 from pstream_base import PStreamBase
+import random
+
 
 class PStreamJSON(PStreamBase):
     """JSON stream implementation that generates sensor data."""
@@ -27,6 +29,8 @@ class PStreamJSON(PStreamBase):
             }
         ]
 
+
+   
     def get_next_data(self) -> bytes:
         """Generate the next JSON data packet."""
         # Cycle through sample data
@@ -44,6 +48,19 @@ class PStreamJSON(PStreamBase):
             json_obj["value"] = 60.2 + (self.counter % 10) * 0.3
         elif json_obj["sensor"] == "pressure":
             json_obj["value"] = 1013.25 + (self.counter % 10) * 0.1
+
+        # Simulating corrupt data
+        if random.random():
+            corruption_type = random.choice(["nonphysical", "noise", "missing", "no_change"])
+
+            if corruption_type == "nonphysical":
+                json_obj["value"] == random.uniform(-9999, 9999)
+            elif corruption_type == "noise":
+                json_obj["value"] *= random.uniform(1.5, 3.0)
+            elif corruption_type == "missing":
+                del json_obj["value"]
+            elif corruption_type == "no_change":
+                pass
 
         self.counter += 1
 
