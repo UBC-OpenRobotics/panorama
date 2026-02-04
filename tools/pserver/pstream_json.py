@@ -60,8 +60,6 @@ class PStreamJSON(PStreamBase):
                 json_obj["value"] *= random.uniform(1.5, 3.0)
             elif corruption_type == "missing":
                 del json_obj["value"]
-            elif corruption_type == "no_change":
-                pass
 
         self.counter += 1
 
