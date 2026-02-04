@@ -3,6 +3,7 @@ import json
 import time
 from pstream_base import PStreamBase
 import random
+import time
 
 
 class PStreamJSON(PStreamBase):
@@ -50,7 +51,7 @@ class PStreamJSON(PStreamBase):
             json_obj["value"] = 1013.25 + (self.counter % 10) * 0.1
 
         # Simulating corrupt data
-        if random.random():
+        if random.random() < 0.5: # 50% chance of seeing corruption in data
             corruption_type = random.choice(["nonphysical", "noise", "missing", "no_change"])
 
             if corruption_type == "nonphysical":
@@ -63,6 +64,14 @@ class PStreamJSON(PStreamBase):
                 pass
 
         self.counter += 1
+
+        """
+        Simulating delay in data stream.
+        Note: If there is a delay,  the server will state: No data received
+        """
+        if random.random() < 0.5: # 50% chance of delay
+            pause_time = 1
+            time.sleep(pause_time)
 
         # Convert to JSON string with newline delimiter ('\n')
         return (json.dumps(json_obj) + '\n').encode('utf-8') 
