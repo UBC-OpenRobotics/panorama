@@ -70,7 +70,7 @@ class PStreamJSON(PStreamBase):
         Note: If there is a delay,  the server will state: No data received
         """
         if random.random() < 0.5: # 50% chance of delay
-            pause_time = 1
+            pause_time = random.uniform(1, 5) 
             time.sleep(pause_time)
 
         # Convert to JSON string with newline delimiter ('\n')
