@@ -1,3 +1,4 @@
+
 #include "client/DataBuffer.hpp"
 #include <iostream>
 #include <iostream>
@@ -105,7 +106,7 @@ void DataBuffer::parseAll(/* std::vector<ParsedData> &out */) {
 
 std::string DataBuffer::toString(const buffer_data_t& buffer_item) {
     //convert one struct of buffer_ into string
-    bool hasUnit = buffer_item.dataunit != '\0';
+    bool hasUnit = buffer_item.dataunit != nullptr && buffer_item.dataunit[0] != '\0';
 
     std::string temp = "{";
 
