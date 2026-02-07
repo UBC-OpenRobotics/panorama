@@ -1,5 +1,6 @@
 #include "client/mainframe.hpp"
 #include "client/message_model.hpp"
+#include "client/DataBuffer.hpp"
 #include "client/graph_panel.hpp"
 #include "client/sensor_data_panel.h"
 #include "client/sensor_manager.hpp"
@@ -7,8 +8,9 @@
 #include <wx/sizer.h>
 
 MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
+    std::shared_ptr<DataBuffer> dataBuffer,
     const wxPoint& pos, const wxSize& size)
-    : wxFrame(nullptr, wxID_ANY, title, pos, size), model_(model) {
+    : wxFrame(nullptr, wxID_ANY, title, pos, size), model_(model), dataBuffer_(dataBuffer) {
     
     // Create splitter for layout
     wxSplitterWindow* mainSplitter = new wxSplitterWindow(this, wxID_ANY);
@@ -92,6 +94,14 @@ void MainFrame::updateMessageDisplay() {
     for (const auto& msg : messages) {
         text += wxString::FromUTF8(msg.c_str()) + "\n";
     }
+
+    if (dataBuffer_->size() > 0) {
+        //std::cout << dataBuffer_->toStringAll();
+        text += "\n--- DataBuffer Contents ---\n";
+        text += wxString::FromUTF8(dataBuffer_->toStringAll());
+        text += "--- End of DataBuffer ---\n";
+    }
+
     messageDisplay_->SetValue(text);
     messageDisplay_->SetInsertionPointEnd();
 }

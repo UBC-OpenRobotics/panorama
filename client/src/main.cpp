@@ -8,6 +8,7 @@
 #include "client/argparser.hpp"
 #include "client/message_model.hpp"
 #include "client/tcp_client.hpp"
+#include "client/DataBuffer.hpp"
 #include "client/json_reader.hpp"
 #include "client/config_manager.hpp"
 #include "client/data_logger.hpp"
@@ -130,8 +131,11 @@ public:
             std::cerr << "Warning: Data logger failed to initialize. Data will not be persisted." << std::endl;
         }
 
+        // --- Create DataBuffer ---
+        dataBuffer_ = std::make_shared<DataBuffer>();
+
         // --- Create and start TCP client on separate thread ---
-        tcpClient_ = std::make_unique<TcpClient>("127.0.0.1", 3000, model_, dataLogger_);
+        tcpClient_ = std::make_unique<TcpClient>("127.0.0.1", 3000, model_, dataBuffer_, dataLogger_);
         tcpClient_->start();
 
         // For running without a gui
@@ -146,9 +150,10 @@ public:
         }
 
         // --- Create view ---
-        MainFrame* w = new MainFrame("Panorama Client", model_);
+        MainFrame* w = new MainFrame("Panorama Client", model_, dataBuffer_);
         w->Show();
 
+ 
         // --- If test mode, quit after 3 seconds ---
         if (parser.isTestMode()) {
             wxTimer* timer = new wxTimer(this);
@@ -173,6 +178,7 @@ public:
 private:
     std::shared_ptr<MessageModel> model_;
     std::shared_ptr<DataLogger> dataLogger_;
+    std::shared_ptr<DataBuffer> dataBuffer_;
     std::unique_ptr<TcpClient> tcpClient_;
 };
 

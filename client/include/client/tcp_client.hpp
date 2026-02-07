@@ -1,15 +1,18 @@
-#pragma once
+#ifndef __TCP_CLIENT__
+#define __TCP_CLIENT__
+
 #include <string>
 #include <atomic>
 #include <thread>
 #include <memory>
 
 class MessageModel;
+class DataBuffer;
 class DataLogger;
 
 class TcpClient {
 public:
-    TcpClient(const std::string& host, int port, std::shared_ptr<MessageModel> model, std::shared_ptr<DataLogger> logger = nullptr);
+    TcpClient(const std::string& host, int port, std::shared_ptr<MessageModel> model, std::shared_ptr<DataBuffer> dataBuffer, std::shared_ptr<DataLogger> logger = nullptr);
     ~TcpClient();
     
     void start();
@@ -24,12 +27,15 @@ private:
     int port_;
     std::shared_ptr<MessageModel> model_;
     std::shared_ptr<DataLogger> logger_;
+    std::shared_ptr<DataBuffer> dataBuffer_;
     std::atomic<bool> running_;
     std::thread clientThread_;
-    
+
 #ifdef _WIN32
     unsigned long long socket_; // SOCKET type on Windows
 #else
     int socket_;
 #endif
 };
+
+#endif

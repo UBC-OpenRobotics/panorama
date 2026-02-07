@@ -1,5 +1,6 @@
 #include "client/tcp_client.hpp"
 #include "client/message_model.hpp"
+#include "client/DataBuffer.hpp"
 #include "client/data_logger.hpp"
 #include "common/panorama_utils.hpp"
 #include <cstring>
@@ -25,8 +26,8 @@
     #define SOCKET_ERROR -1
 #endif
 
-TcpClient::TcpClient(const std::string& host, int port, std::shared_ptr<MessageModel> model, std::shared_ptr<DataLogger> logger)
-    : host_(host), port_(port), model_(model), logger_(logger), running_(false), socket_(INVALID_SOCKET) {
+TcpClient::TcpClient(const std::string& host, int port, std::shared_ptr<MessageModel> model, std::shared_ptr<DataBuffer> dataBuffer, std::shared_ptr<DataLogger> logger)
+    : host_(host), port_(port), model_(model), logger_(logger), dataBuffer_(dataBuffer), running_(false), socket_(INVALID_SOCKET) {
 #ifdef _WIN32
     WSADATA wsaData;
     WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -82,7 +83,7 @@ void TcpClient::run() {
                 cleanup();
                 break;
             }
-            
+
             buffer[bytesRead] = '\0';
             std::string received(buffer);
 
@@ -95,6 +96,11 @@ void TcpClient::run() {
             //pinfo("Received JSON: ", received);
             reader.exportToBuffer(received);
 
+
+            // Parse JSON and write to DataBuffer
+            buffer_data_t parsedData = reader.exportToBuffer(received);
+            dataBuffer_->writeData(parsedData);
+            model_->addMessage("Data" + std::to_string(dataBuffer_->size()));
             model_->addMessage("Received: " + received);
         }
     }

@@ -24,6 +24,11 @@ class PStreamJSON(PStreamBase):
                 "sensor": "pressure",
                 "value": 1013.25,
                 "unit": "hPa"
+            },
+            {
+                "sensor": "light",
+                "value": 0.2,
+                "unit": "nm"
             }
         ]
 
@@ -50,6 +55,7 @@ class PStreamJSON(PStreamBase):
         # Convert to JSON string with newline delimiter ('\n')
         json_str = json.dumps(json_obj)
         message = json_str + '\n'
+
        
 
         return message.encode('utf-8')

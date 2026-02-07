@@ -27,6 +27,7 @@ set(CLIENT_HEADERS
     include/client/message_model.hpp
     include/client/tcp_client.hpp
     include/client/json_reader.hpp
+    include/client/buffer_base.hpp
     include/client/DataBuffer.hpp
     include/client/sensor_manager.hpp
     include/client/sensor_data_panel.h
