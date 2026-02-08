@@ -58,20 +58,10 @@ buffer_data_t JsonReader::exportToBuffer(std::string json) {
         return ret;
     }
 
-    std::string sensorTypeString (
-        doc["sensor"].GetString(),
-        doc["sensor"].GetStringLength()
-    );
-    std::string sensorUnitString (
-        doc["unit"].GetString(),
-        doc["unit"].GetStringLength()
-    );
-    double sensorValue = doc["value"].GetDouble();
-
-    ret.datatype = sensorTypeString.c_str();
-    ret.data = sensorValue;
-    ret.dataunit = sensorUnitString.c_str();
-    ret.timestamp = std::time(&ret.timestamp);
+    ret.datatype = std::string(doc["sensor"].GetString(), doc["sensor"].GetStringLength());
+    ret.dataunit = std::string(doc["unit"].GetString(), doc["unit"].GetStringLength());
+    ret.data = doc["value"].GetDouble();
+    ret.timestamp = std::time(nullptr);
 
     return ret;
 

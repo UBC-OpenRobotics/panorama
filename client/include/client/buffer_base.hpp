@@ -60,7 +60,7 @@ public:
 
     // Returns the first element of the buffer and removes it from the buffer
     virtual T extractNextBuffer() {
-        buffer_data_t ret = buffer_.front();
+        T ret = buffer_.front();
         buffer_.pop_front();
         return ret;
     }    

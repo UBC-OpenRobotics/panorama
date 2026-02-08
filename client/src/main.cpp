@@ -159,6 +159,7 @@ public:
             wxTimer* timer = new wxTimer(this);
             Bind(wxEVT_TIMER, [this, timer](wxTimerEvent&) {
                 timer->Stop();
+                delete timer;
                 wxTheApp->ExitMainLoop();
             });
             timer->StartOnce(3000);
