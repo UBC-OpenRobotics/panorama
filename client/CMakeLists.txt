@@ -53,7 +53,7 @@ target_include_directories(panorama-client
 
 # SQLite3 - Required for config database
 find_package(SQLite3 REQUIRED)
-target_link_libraries(panorama-client PRIVATE SQLite::SQLite3)
+target_link_libraries(panorama-client SQLite::SQLite3)
 
 if(WIN32)
     target_link_libraries(panorama-client PRIVATE ws2_32)

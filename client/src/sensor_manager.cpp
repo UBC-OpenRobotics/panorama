@@ -1,12 +1,14 @@
 #include <wx/wx.h>
 #include <client/sensor_manager.hpp>
 #include "client/settings_dialog.hpp"
+#include "common/panorama_utils.hpp"
 
 SensorManagerPanel::SensorManagerPanel(wxWindow* parent)
 	: wxPanel(parent, wxID_ANY)
 {
+	pinfo("this is where the core dump (memory) issue happens");
 	SetBackgroundColour(wxColour(150, 150, 150));
-
+	pinfo("test2");
 	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
 
 	searchBox_ = new wxTextCtrl(this, wxID_ANY, "Search...", wxDefaultPosition, wxDefaultSize);

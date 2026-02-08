@@ -12,14 +12,17 @@
 #include "client/json_reader.hpp"
 #include "client/config_manager.hpp"
 #include "client/data_logger.hpp"
+#include "common/panorama_utils.hpp"
+
 #include <iostream>
 using namespace std;
 
 class PanoramaClient : public wxApp {
 public:
     virtual bool OnInit() override {
+        pinfo("assertion will fail");
         ArgParser parser(argc, argv);
-
+    
         // --- Runtime Directory Selection ---
         ConfigManager& config = ConfigManager::getInstance();
 
