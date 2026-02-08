@@ -1,7 +1,4 @@
-{
-    "cats": [
-        {"type": "Bernese", "age": 10, "color": "black"},
-        {"type": "Calico", "age": 2, "color": "orange"},
-        {"type": "Mountain", "age": 4, "color": "grey"}
-    ]
-}
+[
+{"datatype": "light", "data": 0.200000, "dataunit": "nm", "timestamp": 1770504589},
+{"datatype": "temperature", "data": 29.500000, "dataunit": "celsius", "timestamp": 1770504589}
+]

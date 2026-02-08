@@ -3,13 +3,14 @@
 #include <string>
 #include <vector>
 #include <mutex>
+#include <list>
 #include "common/panorama_defines.hpp"
 #include "client/buffer_base.hpp"
-#include <list>
+#include "client/data_logger.hpp"
 
 class DataBuffer : public BufferBase<buffer_data_t> {
 public:
-    DataBuffer();
+    DataBuffer(const std::string& logFilePath);
     ~DataBuffer();
 
     // ---------------------------
@@ -60,11 +61,12 @@ public:
 
     std::string toStringAll();
 
-    void exportBuffer();
+    void exportBuffer(std::string exportPath);
 
 private:
     // Raw buffer storing incoming data
     std::list<buffer_data_t> buffer_;
+    std::string logFilePath_;
 
     // ---------------------------
     //      JSON HELPER LOGIC

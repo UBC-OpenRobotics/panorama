@@ -1,10 +1,11 @@
 #include "client/DataBuffer.hpp"
 #include <iostream>
-#include <iostream>
 
-DataBuffer::DataBuffer() {
-    // TODO: any initialization if needed
+DataBuffer::DataBuffer(const std::string& logFilePath) 
+    : logFilePath_(logFilePath) {
+   // TODO: initialize buffer if needed
 }
+
 DataBuffer::~DataBuffer() {
     // TODO: clean things up if needed 
 }
@@ -17,11 +18,17 @@ void DataBuffer::writeData(buffer_data_t jsonChunk) {
    // std::cout << "[DataBuffer]   a: '" << jsonChunk.a << "' a_data: " << jsonChunk.a_data << std::endl;
    // std::cout << "[DataBuffer]   b: '" << jsonChunk.b << "' b_data: " << jsonChunk.b_data << std::endl;
    // std::cout << "[DataBuffer]   Buffer size before write: " << size() << std::endl;
+   
+   //get the runtime directory path from DataLogger to export buffer if it exceeds threshold
+
+   //DataLogger logger;
+   //std::string exportPath = logger.getLogFilePath();
 
     write(jsonChunk);
-    if (size() > MAX_BUFFER_SIZE) {
+
+    if ((int)size() > FLUSH_THRESHOLD * MAX_BUFFER_SIZE / 100) {
         popFront();
-        exportBuffer();
+        exportBuffer(logFilePath_);
     }
     // std::cout << "[DataBuffer]   Buffer size after write: " << size() << std::endl;
     // std::cout << buffer_.size();
@@ -105,16 +112,11 @@ void DataBuffer::parseAll(/* std::vector<ParsedData> &out */) {
 
 std::string DataBuffer::toString(const buffer_data_t& buffer_item) {
     //convert one struct of buffer_ into string
-    bool hasUnit = buffer_item.dataunit != '\0';
 
     std::string temp = "{";
 
     temp = temp + "\"datatype\": \"" + buffer_item.datatype + "\", \"data\": " + std::to_string(buffer_item.data) + ", ";
-
-    if (hasUnit) {
-        temp = temp + "\"dataunit\": \"" + buffer_item.dataunit + "\", ";
-    }
-    
+    temp = temp + "\"dataunit\": \"" + buffer_item.dataunit + "\", ";
     temp = temp + "\"timestamp\": " + std::to_string(buffer_item.timestamp);
 
     temp += "}";
@@ -128,7 +130,7 @@ std::string DataBuffer::toStringAll() {
     std::string res = "";
     int c = 0;
     for (buffer_data_t buffer_item : readAll()) {
-        if (c == size() - 1) {
+        if (c == (int)size() - 1) {
             res += toString(buffer_item) + "\n";
         } else {
             res += toString(buffer_item) + ",\n";
@@ -140,11 +142,15 @@ std::string DataBuffer::toStringAll() {
     return res;
 }
 
-void DataBuffer::exportBuffer() {
+void DataBuffer::exportBuffer(std::string exportPath) {
     //Export the entire buffer (make a local JSON file under client/src/)
-    FILE* fp = fopen("./example.json", "w");
+    
+    std::string exportFile = exportPath + "/exported_buffer.json";
+
+    FILE* fp = fopen(exportFile.c_str(), "w");
     if (!fp) {
 		std::cerr << "Could not open file for writing exported buffer." << std::endl;
+        std::cerr << "logFilePath: " << exportPath << std::endl;
         return;
     }
     

@@ -22,6 +22,9 @@ public:
     // Close the log file
     void close();
 
+    std::string getLogFilePath();
+    
+
 private:
     std::string logFilePath_;
     std::ofstream logFile_;
