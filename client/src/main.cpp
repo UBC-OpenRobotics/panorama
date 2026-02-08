@@ -132,7 +132,7 @@ public:
         }
 
         // --- Create DataBuffer ---
-        dataBuffer_ = std::make_shared<DataBuffer>();
+        dataBuffer_ = std::make_shared<DataBuffer>(runtimeDir + "/data");
 
         // --- Create and start TCP client on separate thread ---
         tcpClient_ = std::make_unique<TcpClient>("127.0.0.1", 3000, model_, dataBuffer_, dataLogger_);

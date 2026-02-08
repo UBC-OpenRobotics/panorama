@@ -99,4 +99,5 @@ protected:
     std::list<T> buffer_;
     mutable std::mutex mutex_;
     int MAX_BUFFER_SIZE = 5;
+    int FLUSH_THRESHOLD = 50; //percentage
 };
