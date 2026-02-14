@@ -51,10 +51,6 @@ target_include_directories(panorama-client
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-# SQLite3 - Required for config database
-find_package(SQLite3 REQUIRED)
-target_link_libraries(panorama-client SQLite::SQLite3)
-
 if(WIN32)
     target_link_libraries(panorama-client PRIVATE ws2_32)
 endif()
