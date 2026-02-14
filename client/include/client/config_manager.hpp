@@ -2,7 +2,7 @@
 
 #include <string>
 #include <mutex>
-#include <sqlite3.h>
+#include <map>
 
 class ConfigManager {
 public:
@@ -18,14 +18,14 @@ public:
     std::string getRuntimeDirectory() const;
     bool hasRuntimeDirectory() const;
 
-    // Database operations
-    bool initializeDatabase();
+    // Config operations
+    bool initializeConfig();
     bool saveConfig(const std::string& key, const std::string& value);
     std::string getConfig(const std::string& key);
 
     // Path helpers
     std::string getDataLogPath() const;
-    std::string getDatabasePath() const;
+    std::string getConfigPath() const;
 
     // TCP settings
     bool saveTcpSettings(const std::string& host, int port, bool autoReconnect, int reconnectDelay);
@@ -38,10 +38,11 @@ private:
     ConfigManager();
 
     std::string runtimeDir_;
-    sqlite3* db_;
+    std::map<std::string, std::string> configData_;
     mutable std::mutex mutex_;
 
     bool createDirectoryStructure();
     bool testDirectoryWritable(const std::string& path);
-    bool executeSql(const std::string& sql);
+    bool loadFromJson();
+    bool saveToJson();
 };

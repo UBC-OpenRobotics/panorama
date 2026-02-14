@@ -3,15 +3,11 @@
 #include <fstream>
 #include <iostream>
 #include <cstdlib>
+#include <sstream>
 
-ConfigManager::ConfigManager() : db_(nullptr) {}
+ConfigManager::ConfigManager() {}
 
-ConfigManager::~ConfigManager() {
-    if (db_) {
-        sqlite3_close(db_);
-        db_ = nullptr;
-    }
-}
+ConfigManager::~ConfigManager() {}
 
 ConfigManager& ConfigManager::getInstance() {
     static ConfigManager instance;
@@ -67,12 +63,12 @@ std::string ConfigManager::getDataLogPath() const {
     return runtimeDir_ + "/data/tcp_data.jsonl";
 }
 
-std::string ConfigManager::getDatabasePath() const {
+std::string ConfigManager::getConfigPath() const {
     std::lock_guard<std::mutex> lock(mutex_);
     if (runtimeDir_.empty()) {
         return "";
     }
-    return runtimeDir_ + "/config.db";
+    return runtimeDir_ + "/config.json";
 }
 
 bool ConfigManager::testDirectoryWritable(const std::string& path) {
@@ -97,199 +93,157 @@ bool ConfigManager::createDirectoryStructure() {
     }
 }
 
-bool ConfigManager::initializeDatabase() {
-    std::string dbPath = getDatabasePath();
-    if (dbPath.empty()) {
+bool ConfigManager::initializeConfig() {
+    std::string configPath = getConfigPath();
+    if (configPath.empty()) {
         std::cerr << "Runtime directory not set" << std::endl;
         return false;
     }
 
-    // Open database
-    int rc = sqlite3_open(dbPath.c_str(), &db_);
-    if (rc != SQLITE_OK) {
-        std::cerr << "Failed to open database: " << sqlite3_errmsg(db_) << std::endl;
-        return false;
+    // Check if theres an existing config file, if so use that instead since this would mean
+    // user loaded up a pre-exisiting project
+    if (std::filesystem::exists(configPath)) {
+        if (!loadFromJson()) {
+            std::cerr << "Failed to load config from JSON" << std::endl;
+            return false;
+        }
+    } else {
+        // default init
+        configData_["runtime_directory"] = runtimeDir_;
+        configData_["tcp_host"] = "127.0.0.1";
+        configData_["tcp_port"] = "3000";
+        configData_["tcp_auto_reconnect"] = "true";
+        configData_["tcp_reconnect_delay_sec"] = "5";
+
+        if (!saveToJson()) {
+            std::cerr << "Failed to save initial config" << std::endl;
+            return false;
+        }
     }
 
-    // Enable thread-safety
-    sqlite3_busy_timeout(db_, 5000);
-
-    // Create schema
-    const char* schema = R"(
-        CREATE TABLE IF NOT EXISTS config (
-            key TEXT PRIMARY KEY,
-            value TEXT NOT NULL,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS tcp_settings (
-            id INTEGER PRIMARY KEY CHECK (id = 1),
-            host TEXT NOT NULL DEFAULT '127.0.0.1',
-            port INTEGER NOT NULL DEFAULT 3000,
-            auto_reconnect BOOLEAN DEFAULT 1,
-            reconnect_delay_sec INTEGER DEFAULT 5
-        );
-
-        CREATE TABLE IF NOT EXISTS logging_settings (
-            id INTEGER PRIMARY KEY CHECK (id = 1),
-            max_file_size_mb INTEGER DEFAULT 10,
-            max_file_duration_min INTEGER DEFAULT 60,
-            log_format TEXT DEFAULT 'jsonl'
-        );
-
-        CREATE TABLE IF NOT EXISTS sensors (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            type TEXT NOT NULL,
-            enabled BOOLEAN DEFAULT 1,
-            color TEXT,
-            unit TEXT
-        );
-
-        CREATE TABLE IF NOT EXISTS metadata (
-            key TEXT PRIMARY KEY,
-            value TEXT
-        );
-
-        INSERT OR IGNORE INTO metadata (key, value) VALUES
-            ('db_version', '1.0'),
-            ('created_at', datetime('now'));
-
-        INSERT OR IGNORE INTO tcp_settings (id, host, port) VALUES (1, '127.0.0.1', 3000);
-        INSERT OR IGNORE INTO logging_settings (id) VALUES (1);
-    )";
-
-    if (!executeSql(schema)) {
-        return false;
-    }
-
-    // Save runtime directory to config
     saveConfig("runtime_directory", runtimeDir_);
 
     return true;
 }
 
-bool ConfigManager::executeSql(const std::string& sql) {
-    char* errMsg = nullptr;
-    int rc = sqlite3_exec(db_, sql.c_str(), nullptr, nullptr, &errMsg);
+bool ConfigManager::loadFromJson() {
+    std::string configPath = getConfigPath();
+    std::ifstream file(configPath);
 
-    if (rc != SQLITE_OK) {
-        std::cerr << "SQL error: " << errMsg << std::endl;
-        sqlite3_free(errMsg);
+    if (!file.is_open()) {
         return false;
     }
 
+    std::string line;
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    std::string content = buffer.str();
+
+    size_t start = content.find('{');
+    size_t end = content.rfind('}');
+    if (start == std::string::npos || end == std::string::npos) {
+        return false;
+    }
+
+    content = content.substr(start + 1, end - start - 1);
+
+    std::istringstream stream(content);
+    std::string pair;
+
+    while (std::getline(stream, pair, ',')) {
+        size_t colonPos = pair.find(':');
+        if (colonPos == std::string::npos) {
+            continue;
+        }
+
+        std::string key = pair.substr(0, colonPos);
+        std::string value = pair.substr(colonPos + 1);
+
+        auto trim = [](std::string& s) {
+            s.erase(0, s.find_first_not_of(" \t\n\r\""));
+            s.erase(s.find_last_not_of(" \t\n\r\"") + 1);
+        };
+
+        trim(key);
+        trim(value);
+
+        if (!key.empty()) {
+            configData_[key] = value;
+        }
+    }
+
+    return true;
+}
+
+bool ConfigManager::saveToJson() {
+    std::string configPath = getConfigPath();
+    std::ofstream file(configPath);
+
+    if (!file.is_open()) {
+        std::cerr << "Failed to open config file for writing: " << configPath << std::endl;
+        return false;
+    }
+
+    // Write out json
+    file << "{\n";
+    bool first = true;
+    for (const auto& [key, value] : configData_) {
+        if (!first) {
+            file << ",\n";
+        }
+        file << "  \"" << key << "\": \"" << value << "\"";
+        first = false;
+    }
+    file << "\n}\n";
+
+    file.close();
     return true;
 }
 
 bool ConfigManager::saveConfig(const std::string& key, const std::string& value) {
     std::lock_guard<std::mutex> lock(mutex_);
 
-    if (!db_) {
-        return false;
-    }
-
-    const char* sql = "INSERT OR REPLACE INTO config (key, value, updated_at) VALUES (?, ?, datetime('now'))";
-    sqlite3_stmt* stmt;
-
-    int rc = sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr);
-    if (rc != SQLITE_OK) {
-        std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db_) << std::endl;
-        return false;
-    }
-
-    sqlite3_bind_text(stmt, 1, key.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(stmt, 2, value.c_str(), -1, SQLITE_TRANSIENT);
-
-    rc = sqlite3_step(stmt);
-    sqlite3_finalize(stmt);
-
-    return rc == SQLITE_DONE;
+    configData_[key] = value;
+    return saveToJson();
 }
 
 std::string ConfigManager::getConfig(const std::string& key) {
     std::lock_guard<std::mutex> lock(mutex_);
 
-    if (!db_) {
-        return "";
+    auto it = configData_.find(key);
+    if (it != configData_.end()) {
+        return it->second;
     }
-
-    const char* sql = "SELECT value FROM config WHERE key = ?";
-    sqlite3_stmt* stmt;
-    std::string result;
-
-    int rc = sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr);
-    if (rc != SQLITE_OK) {
-        return "";
-    }
-
-    sqlite3_bind_text(stmt, 1, key.c_str(), -1, SQLITE_TRANSIENT);
-
-    if (sqlite3_step(stmt) == SQLITE_ROW) {
-        const char* value = (const char*)sqlite3_column_text(stmt, 0);
-        if (value) {
-            result = value;
-        }
-    }
-
-    sqlite3_finalize(stmt);
-    return result;
+    return "";
 }
 
 bool ConfigManager::saveTcpSettings(const std::string& host, int port, bool autoReconnect, int reconnectDelay) {
     std::lock_guard<std::mutex> lock(mutex_);
 
-    if (!db_) {
-        return false;
-    }
+    configData_["tcp_host"] = host;
+    configData_["tcp_port"] = std::to_string(port);
+    configData_["tcp_auto_reconnect"] = autoReconnect ? "true" : "false";
+    configData_["tcp_reconnect_delay_sec"] = std::to_string(reconnectDelay);
 
-    const char* sql = "INSERT OR REPLACE INTO tcp_settings (id, host, port, auto_reconnect, reconnect_delay_sec) VALUES (1, ?, ?, ?, ?)";
-    sqlite3_stmt* stmt;
-
-    int rc = sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr);
-    if (rc != SQLITE_OK) {
-        return false;
-    }
-
-    sqlite3_bind_text(stmt, 1, host.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_int(stmt, 2, port);
-    sqlite3_bind_int(stmt, 3, autoReconnect ? 1 : 0);
-    sqlite3_bind_int(stmt, 4, reconnectDelay);
-
-    rc = sqlite3_step(stmt);
-    sqlite3_finalize(stmt);
-
-    return rc == SQLITE_DONE;
+    return saveToJson();
 }
 
 bool ConfigManager::getTcpSettings(std::string& host, int& port, bool& autoReconnect, int& reconnectDelay) {
     std::lock_guard<std::mutex> lock(mutex_);
 
-    if (!db_) {
+    auto hostIt = configData_.find("tcp_host");
+    auto portIt = configData_.find("tcp_port");
+    auto autoReconnectIt = configData_.find("tcp_auto_reconnect");
+    auto reconnectDelayIt = configData_.find("tcp_reconnect_delay_sec");
+
+    if (hostIt == configData_.end() || portIt == configData_.end()) {
         return false;
     }
 
-    const char* sql = "SELECT host, port, auto_reconnect, reconnect_delay_sec FROM tcp_settings WHERE id = 1";
-    sqlite3_stmt* stmt;
+    host = hostIt->second;
+    port = std::stoi(portIt->second);
+    autoReconnect = (autoReconnectIt != configData_.end() && autoReconnectIt->second == "true");
+    reconnectDelay = (reconnectDelayIt != configData_.end()) ? std::stoi(reconnectDelayIt->second) : 5;
 
-    int rc = sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr);
-    if (rc != SQLITE_OK) {
-        return false;
-    }
-
-    if (sqlite3_step(stmt) == SQLITE_ROW) {
-        const char* hostStr = (const char*)sqlite3_column_text(stmt, 0);
-        if (hostStr) {
-            host = hostStr;
-        }
-        port = sqlite3_column_int(stmt, 1);
-        autoReconnect = sqlite3_column_int(stmt, 2) != 0;
-        reconnectDelay = sqlite3_column_int(stmt, 3);
-
-        sqlite3_finalize(stmt);
-        return true;
-    }
-
-    sqlite3_finalize(stmt);
-    return false;
+    return true;
 }
