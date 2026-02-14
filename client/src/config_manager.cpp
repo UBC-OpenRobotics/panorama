@@ -15,7 +15,7 @@ ConfigManager& ConfigManager::getInstance() {
 }
 
 bool ConfigManager::setRuntimeDirectory(const std::string& path) {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
 
     // Verify directory exists
     if (!std::filesystem::exists(path)) {
@@ -46,17 +46,17 @@ bool ConfigManager::setRuntimeDirectory(const std::string& path) {
 }
 
 std::string ConfigManager::getRuntimeDirectory() const {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     return runtimeDir_;
 }
 
 bool ConfigManager::hasRuntimeDirectory() const {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     return !runtimeDir_.empty();
 }
 
 std::string ConfigManager::getDataLogPath() const {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (runtimeDir_.empty()) {
         return "";
     }
@@ -64,7 +64,7 @@ std::string ConfigManager::getDataLogPath() const {
 }
 
 std::string ConfigManager::getConfigPath() const {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (runtimeDir_.empty()) {
         return "";
     }
@@ -201,14 +201,14 @@ bool ConfigManager::saveToJson() {
 }
 
 bool ConfigManager::saveConfig(const std::string& key, const std::string& value) {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
 
     configData_[key] = value;
     return saveToJson();
 }
 
 std::string ConfigManager::getConfig(const std::string& key) {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
 
     auto it = configData_.find(key);
     if (it != configData_.end()) {
@@ -218,7 +218,7 @@ std::string ConfigManager::getConfig(const std::string& key) {
 }
 
 bool ConfigManager::saveTcpSettings(const std::string& host, int port, bool autoReconnect, int reconnectDelay) {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
 
     configData_["tcp_host"] = host;
     configData_["tcp_port"] = std::to_string(port);
@@ -229,7 +229,7 @@ bool ConfigManager::saveTcpSettings(const std::string& host, int port, bool auto
 }
 
 bool ConfigManager::getTcpSettings(std::string& host, int& port, bool& autoReconnect, int& reconnectDelay) {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
 
     auto hostIt = configData_.find("tcp_host");
     auto portIt = configData_.find("tcp_port");

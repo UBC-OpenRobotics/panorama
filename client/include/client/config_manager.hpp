@@ -39,7 +39,7 @@ private:
 
     std::string runtimeDir_;
     std::map<std::string, std::string> configData_;
-    mutable std::mutex mutex_;
+    mutable std::recursive_mutex mutex_;
 
     bool createDirectoryStructure();
     bool testDirectoryWritable(const std::string& path);
