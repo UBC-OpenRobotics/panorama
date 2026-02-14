@@ -142,7 +142,7 @@ public:
         if (parser.isNoGuiMode()) {
             cout << "Running in console mode (no GUI). Press Ctrl+C to exit.\n";
             cout << "Listening for JSON stream...\n\n";
-            
+
             while (true) {
                 std::this_thread::sleep_for(std::chrono::seconds(1)); // Run forever in console
             }
