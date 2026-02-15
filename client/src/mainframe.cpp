@@ -30,7 +30,7 @@ MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
     wxPanel* dataViewPanel = new wxPanel(rightSplitter);
     dataViewPanel->SetBackgroundColour(wxColour(240, 240, 240)); 
     
-    SensorDataFrame* sensorDataGrid = new SensorDataFrame(dataViewPanel, sensorNames);
+    sensorDataGrid = new SensorDataFrame(dataViewPanel, sensorNames);
     
     wxBoxSizer* dataViewSizer = new wxBoxSizer(wxVERTICAL);
     dataViewSizer->Add(sensorDataGrid, 1, wxEXPAND);
@@ -76,10 +76,10 @@ MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
     SetSizer(mainSizer);
 
     // Register as observer
-    model_->addObserver([this, sensorDataGrid]() {
+    model_->addObserver([this]() {
         // Use CallAfter to update GUI from non-GUI thread
         CallAfter(&MainFrame::updateMessageDisplay);
-        CallAfter(&MainFrame::updateDataPanel, sensorDataGrid);
+        CallAfter(&MainFrame::updateDataPanel);
     });
 
     CreateStatusBar();
@@ -103,7 +103,7 @@ void MainFrame::updateMessageDisplay() {
     messageDisplay_->SetInsertionPointEnd();
 }
 
-void MainFrame::updateDataPanel(SensorDataFrame* sensorDataGrid) {
+void MainFrame::updateDataPanel() {
 
     /*
     float data; // actual value
@@ -122,6 +122,7 @@ void MainFrame::updateDataPanel(SensorDataFrame* sensorDataGrid) {
 
     if (dataBuffer_->size() > 0) {
         for (buffer_data_t latestData : dataBuffer_->readAll()) {
+            
             sensorDataGrid->UpdateReading(latestData.datatype, (double)latestData.data, latestData.dataunit);
             
             //std::cout << "Updated " << latestData.datatype << " with value: " << latestData.data << " " << latestData.dataunit << std::endl;

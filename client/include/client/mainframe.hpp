@@ -29,7 +29,8 @@ public:
 
 private:
     void updateMessageDisplay();
-    void updateDataPanel(SensorDataFrame* sensorDataGrid);
+    void updateDataPanel();
+    SensorDataFrame* sensorDataGrid;
 
     std::shared_ptr<MessageModel> model_;
     std::shared_ptr<DataBuffer> dataBuffer_;
