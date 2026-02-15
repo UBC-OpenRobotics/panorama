@@ -22,10 +22,10 @@ MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
 
     // Data view area - Sensor Data Panel
     wxArrayString sensorNames;
-    sensorNames.Add("Temperature");
-    sensorNames.Add("Humidity");
-    sensorNames.Add("Pressure");
-    sensorNames.Add("Light");
+    sensorNames.Add("temperature");
+    sensorNames.Add("humidity");
+    sensorNames.Add("pressure");
+    sensorNames.Add("light");
 
     wxPanel* dataViewPanel = new wxPanel(rightSplitter);
     dataViewPanel->SetBackgroundColour(wxColour(240, 240, 240)); 
@@ -122,10 +122,10 @@ void MainFrame::updateDataPanel() {
 
     if (dataBuffer_->size() > 0) {
         for (buffer_data_t latestData : dataBuffer_->readAll()) {
-            
+
             sensorDataGrid->UpdateReading(latestData.datatype, (double)latestData.data, latestData.dataunit);
             
-            //std::cout << "Updated " << latestData.datatype << " with value: " << latestData.data << " " << latestData.dataunit << std::endl;
+            std::cout << "Updated " << latestData.datatype << " with value: " << latestData.data << " " << latestData.dataunit << std::endl;
         }
     }
 }
