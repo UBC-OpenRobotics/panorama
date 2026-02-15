@@ -96,7 +96,7 @@ void SensorDataFrame::UpdateReading(const std::string& sensorName, double value,
     wxString timestamp = wxDateTime::Now().FormatISOTime();
     grid_->SetCellValue(row, 2, timestamp);
 
-    std::cout << "Updated " << sensorName << " with value: " << valueStr.ToStdString() << " at " << timestamp.ToStdString() << std::endl;
+    //std::cout << "Updated " << sensorName << " with value: " << valueStr.ToStdString() << " at " << timestamp.ToStdString() << std::endl;
     
     // Color 
     if (value > 50.0) {

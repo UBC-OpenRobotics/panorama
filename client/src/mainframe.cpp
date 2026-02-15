@@ -125,7 +125,7 @@ void MainFrame::updateDataPanel() {
 
             sensorDataGrid->UpdateReading(latestData.datatype, (double)latestData.data, latestData.dataunit);
             
-            std::cout << "Updated " << latestData.datatype << " with value: " << latestData.data << " " << latestData.dataunit << std::endl;
+            //std::cout << "Updated " << latestData.datatype << " with value: " << latestData.data << " " << latestData.dataunit << std::endl;
         }
     }
 }
