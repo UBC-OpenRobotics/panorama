@@ -11,6 +11,7 @@
 #include <vector>
 #include <memory>
 #include <map>
+#include "client/sensor_data_panel.h"
 
 
 class MessageModel;
@@ -28,6 +29,7 @@ public:
 
 private:
     void updateMessageDisplay();
+    void updateDataPanel(SensorDataFrame* sensorDataGrid);
 
     std::shared_ptr<MessageModel> model_;
     std::shared_ptr<DataBuffer> dataBuffer_;
