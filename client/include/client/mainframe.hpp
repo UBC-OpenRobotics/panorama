@@ -32,6 +32,7 @@ public:
 
 private:
     void onModelUpdated();
+    void onSensorToggled();
     void updateMessageDisplay();
     void updateDataPanel();
     SensorDataFrame* sensorDataGrid;

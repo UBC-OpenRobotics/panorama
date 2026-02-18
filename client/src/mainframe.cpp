@@ -74,6 +74,9 @@ MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
     // Register as observer
     model_->addObserver(std::bind(&MainFrame::onModelUpdated, this));
 
+    // Register checkbox toggle callback
+    sensorManager_->SetOnSensorToggled(std::bind(&MainFrame::onSensorToggled, this));
+
     CreateStatusBar();
 }
 
@@ -81,6 +84,10 @@ void MainFrame::onModelUpdated() {
     // Use CallAfter to update GUI seperate from network thread or smthing
     CallAfter(&MainFrame::updateMessageDisplay);
     CallAfter(&MainFrame::updateDataPanel);
+}
+
+void MainFrame::onSensorToggled() {
+    sensorDataGrid->SetActiveSensors(sensorManager_->GetEnabledSensorNames());
 }
 
 void MainFrame::updateMessageDisplay() {

@@ -12,7 +12,7 @@ SensorManagerPanel::SensorManagerPanel(wxWindow* parent)
 	searchBox_ = new wxTextCtrl(this, wxID_ANY, "Search...", wxDefaultPosition, wxDefaultSize);
 	sizer_->Add(searchBox_, 0, wxEXPAND | wxALL, 5);
 
-	// Sensors will be added dynamically via AddSensor()
+	// Sensors will be added dynamically with AddSensor()
 
 	sizer_->AddStretchSpacer();
 
@@ -41,6 +41,19 @@ void SensorManagerPanel::AddSensor(std::shared_ptr<Sensor> sensor) {
 	Layout();
 }
 
+void SensorManagerPanel::SetOnSensorToggled(std::function<void()> callback) {
+	onSensorToggled_ = callback;
+}
+
+std::vector<std::string> SensorManagerPanel::GetEnabledSensorNames() const {
+	std::vector<std::string> names;
+	for (const auto& pair : checkboxToSensor_) {
+		if (pair.second->checkEnabled())
+			names.push_back(pair.second->GetName());
+	}
+	return names;
+}
+
 void SensorManagerPanel::OnSensorCheckbox(wxCommandEvent& event) {
 	wxCheckBox* checkbox = static_cast<wxCheckBox*>(event.GetEventObject());
 
@@ -49,10 +62,8 @@ void SensorManagerPanel::OnSensorCheckbox(wxCommandEvent& event) {
 	if (it != checkboxToSensor_.end()) {
 		it->second->SetEnabled(checkbox->IsChecked());
 
-		wxString msg = wxString::Format("%s is now %s",
-			it->second->GetName(),
-			checkbox->IsChecked() ? "enabled" : "disabled");
-		wxLogMessage(msg);
+		if (onSensorToggled_)
+			onSensorToggled_();
 	}
 }
 
@@ -64,3 +75,4 @@ void SensorManagerPanel::OnSettings(wxCommandEvent& event) {
 	SettingsDialog dialog(this);
 	dialog.ShowModal();
 }
+

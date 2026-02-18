@@ -127,19 +127,9 @@ void SensorDataFrame::ClearReadings() {
 
 void SensorDataFrame::SetActiveSensors(const std::vector<std::string>& sensors) {
     for (int i = 0; i < grid_->GetNumberRows(); ++i) {
-        wxString sensorName = grid_->GetCellValue(i, 0);
-        bool isActive = std::find(sensors.begin(), sensors.end(), 
-            sensorName.ToStdString()) != sensors.end();
-
-    if (!isActive) {
-            grid_->SetCellTextColour(i, 0, *wxLIGHT_GREY);
-        grid_->SetCellTextColour(i, 1, *wxLIGHT_GREY);
-            grid_->SetCellTextColour(i, 2, *wxLIGHT_GREY);
-    } else {
-      grid_->SetCellTextColour(i, 0, *wxBLACK);
-            grid_->SetCellTextColour(i, 1, *wxBLACK);
-          grid_->SetCellTextColour(i, 2, *wxBLACK);
-     }
+        std::string name = grid_->GetCellValue(i, 0).ToStdString();
+        bool isActive = std::find(sensors.begin(), sensors.end(), name) != sensors.end();
+        grid_->SetRowSize(i, isActive ? 20 : 0);
     }
     grid_->ForceRefresh();
 }
