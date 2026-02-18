@@ -4,8 +4,10 @@
 #include "client/graph_panel.hpp"
 #include "client/sensor_data_panel.h"
 #include "client/sensor_manager.hpp"
+#include "client/sensor.hpp"
 #include <wx/dcbuffer.h>
 #include <wx/sizer.h>
+#include <functional>
 
 MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
     std::shared_ptr<DataBuffer> dataBuffer,
@@ -18,19 +20,13 @@ MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
     wxSplitterWindow* rightSplitter = new wxSplitterWindow(topSplitter, wxID_ANY);
     // Create the four main panels
     // Sensor manager panel
-    SensorManagerPanel* sensorPanel = new SensorManagerPanel(topSplitter);
+    sensorManager_ = new SensorManagerPanel(topSplitter);
 
-    // Data view area - Sensor Data Panel
-    wxArrayString sensorNames;
-    sensorNames.Add("temperature");
-    sensorNames.Add("humidity");
-    sensorNames.Add("pressure");
-    sensorNames.Add("light");
-
+    // Data view area - Sensor Data Panel (rows added dynamically as sensors arrive)
     wxPanel* dataViewPanel = new wxPanel(rightSplitter);
     dataViewPanel->SetBackgroundColour(wxColour(240, 240, 240)); 
     
-    sensorDataGrid = new SensorDataFrame(dataViewPanel, sensorNames);
+    sensorDataGrid = new SensorDataFrame(dataViewPanel, wxArrayString());
     
     wxBoxSizer* dataViewSizer = new wxBoxSizer(wxVERTICAL);
     dataViewSizer->Add(sensorDataGrid, 1, wxEXPAND);
@@ -60,7 +56,7 @@ MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
     rightSplitter->SetMinimumPaneSize(100);
     rightSplitter->SetSashGravity(0.0); // keeps data panel a 180px, graph takes extra space
     
-    topSplitter->SplitVertically(sensorPanel, rightSplitter, 200);
+    topSplitter->SplitVertically(sensorManager_, rightSplitter, 200);
     topSplitter->SetMinimumPaneSize(100);
     topSplitter->SetSashGravity(0.0); 
 
@@ -76,13 +72,15 @@ MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
     SetSizer(mainSizer);
 
     // Register as observer
-    model_->addObserver([this]() {
-        // Use CallAfter to update GUI from non-GUI thread
-        CallAfter(&MainFrame::updateMessageDisplay);
-        CallAfter(&MainFrame::updateDataPanel);
-    });
+    model_->addObserver(std::bind(&MainFrame::onModelUpdated, this));
 
     CreateStatusBar();
+}
+
+void MainFrame::onModelUpdated() {
+    // Use CallAfter to update GUI seperate from network thread or smthing
+    CallAfter(&MainFrame::updateMessageDisplay);
+    CallAfter(&MainFrame::updateDataPanel);
 }
 
 void MainFrame::updateMessageDisplay() {
@@ -122,6 +120,16 @@ void MainFrame::updateDataPanel() {
 
     if (dataBuffer_->size() > 0) {
         for (buffer_data_t latestData : dataBuffer_->readAll()) {
+
+
+
+            // Add Sensors to sensor manager and data grid only when they are first seen
+            if (registeredSensors_.find(latestData.datatype) == registeredSensors_.end()) {
+                auto sensor = std::make_shared<Sensor>(latestData.datatype, latestData.dataunit);
+                sensorManager_->AddSensor(sensor);
+                sensorDataGrid->AddSensorRow(latestData.datatype);
+                registeredSensors_.insert(latestData.datatype);
+            }
 
             sensorDataGrid->UpdateReading(latestData.datatype, (double)latestData.data, latestData.dataunit);
             

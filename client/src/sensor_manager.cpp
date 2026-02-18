@@ -7,48 +7,52 @@ SensorManagerPanel::SensorManagerPanel(wxWindow* parent)
 {
 	SetBackgroundColour(wxColour(150, 150, 150));
 
-	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
+	sizer_ = new wxBoxSizer(wxVERTICAL);
 
 	searchBox_ = new wxTextCtrl(this, wxID_ANY, "Search...", wxDefaultPosition, wxDefaultSize);
+	sizer_->Add(searchBox_, 0, wxEXPAND | wxALL, 5);
 
-	sizer->Add(searchBox_, 0, wxEXPAND | wxALL, 5);
+	// Sensors will be added dynamically via AddSensor()
 
-	//create checkboxes
-	for (int i = 0; i < 5; i++) {
-		wxString label = wxString::Format("sensor %d", i + 1);
-		wxCheckBox* checkbox = new wxCheckBox(this, wxID_ANY, label);
-
-		sensorCheckboxes_.push_back(checkbox);
-
-		sizer->Add(checkbox, 0, wxALL, 5);
-
-		checkbox->Bind(wxEVT_CHECKBOX, &SensorManagerPanel::OnSensorCheckbox, this);
-	}
-
-	sizer->AddStretchSpacer();
+	sizer_->AddStretchSpacer();
 
 	addDataBtn_ = new wxButton(this, wxID_ANY, "Add Data");
-	sizer->Add(addDataBtn_, 0, wxEXPAND | wxALL, 5);
+	sizer_->Add(addDataBtn_, 0, wxEXPAND | wxALL, 5);
 	addDataBtn_->Bind(wxEVT_BUTTON, &SensorManagerPanel::OnAddData, this);
 
 	settingsBtn_ = new wxButton(this, wxID_ANY, "Settings");
-	sizer->Add(settingsBtn_, 0, wxEXPAND | wxALL, 5);
+	sizer_->Add(settingsBtn_, 0, wxEXPAND | wxALL, 5);
 	settingsBtn_->Bind(wxEVT_BUTTON, &SensorManagerPanel::OnSettings, this);
 
-	SetSizer(sizer);
+	SetSizer(sizer_);
+}
 
+void SensorManagerPanel::AddSensor(std::shared_ptr<Sensor> sensor) {
+
+	wxCheckBox* checkbox = new wxCheckBox(this, wxID_ANY, sensor->GetName());
+	checkbox->SetValue(sensor->checkEnabled());
+
+	sizer_->Insert(sizer_->GetItemCount() - 3, checkbox, 0, wxALL, 5);
+
+	checkboxToSensor_[checkbox] = sensor;
+
+	checkbox->Bind(wxEVT_CHECKBOX, &SensorManagerPanel::OnSensorCheckbox, this);
+
+	Layout();
 }
 
 void SensorManagerPanel::OnSensorCheckbox(wxCommandEvent& event) {
-	// Find which checkbox was clicked
-	for (size_t i = 0; i < sensorCheckboxes_.size(); i++) {
-		if (event.GetEventObject() == sensorCheckboxes_[i]) {
-			wxString msg = wxString::Format("Sensor %d is now %s",
-				i + 1,
-				sensorCheckboxes_[i]->IsChecked() ? "checked" : "unchecked");
-			wxLogMessage(msg);  // Prints to console/debug output
-			break;
-		}
+	wxCheckBox* checkbox = static_cast<wxCheckBox*>(event.GetEventObject());
+
+	auto it = checkboxToSensor_.find(checkbox);
+	
+	if (it != checkboxToSensor_.end()) {
+		it->second->SetEnabled(checkbox->IsChecked());
+
+		wxString msg = wxString::Format("%s is now %s",
+			it->second->GetName(),
+			checkbox->IsChecked() ? "enabled" : "disabled");
+		wxLogMessage(msg);
 	}
 }
 

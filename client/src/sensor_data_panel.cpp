@@ -84,6 +84,17 @@ void SensorDataFrame::InitializeGrid() {
     }
 }
 
+void SensorDataFrame::AddSensorRow(const std::string& sensorName) {
+    int newRow = grid_->GetNumberRows();
+    grid_->AppendRows(1);
+    grid_->SetCellValue(newRow, 0, sensorName);
+    grid_->SetCellValue(newRow, 1, "--");
+    grid_->SetCellValue(newRow, 2, "No data");
+    grid_->SetCellAlignment(newRow, 1, wxALIGN_CENTER, wxALIGN_CENTER);
+    grid_->SetCellAlignment(newRow, 2, wxALIGN_CENTER, wxALIGN_CENTER);
+    grid_->ForceRefresh();
+}
+
 void SensorDataFrame::UpdateReading(const std::string& sensorName, double value, const std::string& unit) {
     int row = FindSensorRow(sensorName);
     if (row == -1) return;
