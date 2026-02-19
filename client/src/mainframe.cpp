@@ -128,7 +128,8 @@ void MainFrame::updateDataPanel() {
     if (dataBuffer_->size() > 0) {
         for (buffer_data_t latestData : dataBuffer_->readAll()) {
 
-
+            // Skip entries with no data-type (first sensor reading)
+            if (latestData.datatype.empty()) continue;
 
             // Add Sensors to sensor manager and data grid only when they are first seen
             if (registeredSensors_.find(latestData.datatype) == registeredSensors_.end()) {
