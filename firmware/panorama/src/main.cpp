@@ -1,106 +1,152 @@
+#include "i2c_protocol.h"
+
 #include <Arduino.h>
 #include <WiFi.h>
+#include <WiFiClient.h>
+#include <WiFiServer.h>
+#include <Wire.h>
 
-// ===== Wi-Fi Access Point (ESP32 hosts itself) =====
-const char* AP_SSID = "ESP32-JSON";
-const char* AP_PASS = "esp32json";    // must be 8+ chars
+// Wi-Fi Access Point credentials
+const char *SSID = "ESP32-Interface";
+const char *PASS = "12345678";
+const uint16_t PORT = 9000;
 
-// ===== TCP server =====
-const uint16_t SERVER_PORT = 9000;
-WiFiServer server(SERVER_PORT);
+WiFiServer server(PORT);
+WiFiClient client;
 
-// ===== State =====
-WiFiClient client;            // single client for simplicity
-unsigned long lastSendMs = 0; // pacing JSON sends
-const uint32_t SEND_PERIOD_MS = 1000;
+bool sendEnabled = false;
+unsigned long sampleIntervalMs = 1000;
+unsigned long lastSendMs = 0;
 
-// make a tiny JSON line without ArduinoJson
-String makeJson() {
-  // dummy data — tweak as you like
-  static int seq = 0;
-  float temp = 20.0 + sin(millis() / 1000.0) * 2.5;
-  int humidity = 40 + (millis()/1000) % 20;
+const int I2C_SDA_PIN = 21;
+const int I2C_SCL_PIN = 22;
+const uint32_t I2C_CLOCK_HZ = 100000;
 
-  // ISO-ish time in ms since boot for now
-  String s = "{";
-  s += "\"seq\":" + String(seq++) + ",";
-  s += "\"ts_ms\":" + String(millis()) + ",";
-  s += "\"temp_c\":" + String(temp, 2) + ",";
-  s += "\"humidity\":" + String(humidity) + ",";
-  s += "\"status\":\"ok\"";
-  s += "}\n";                   // newline-delimited JSON (NDJSON)
-  return s;
+const uint16_t SENSOR_ID = 1;
+const char *SENSOR_NAME = "temperature_i2c";
+
+uint8_t sensorAddresses[MAX_I2C_SENSORS];
+size_t sensorCount = 0;
+
+void setupAccessPoint() {
+    WiFi.mode(WIFI_AP);
+    WiFi.softAP(SSID, PASS);
+    IPAddress ip = WiFi.softAPIP();
+    Serial.printf("AP started: %s (%s)\n", SSID, ip.toString().c_str());
+}
+
+bool readTemperatureC(uint8_t address, float &temperatureC) {
+    // Common I2C temperature sensors expose temperature at register 0x00.
+    Wire.beginTransmission(address);
+    Wire.write((uint8_t)0x00);
+    if (Wire.endTransmission(false) != 0) {
+        return false;
+    }
+
+    uint8_t data[2] = {0, 0};
+    if (!readFromI2C(address, data, sizeof(data))) {
+        return false;
+    }
+
+    // TMP102-style 12-bit signed temperature conversion.
+    int16_t raw = ((int16_t)data[0] << 8) | data[1];
+    raw >>= 4;
+    if (raw & 0x0800) {
+        raw |= 0xF000;
+    }
+
+    temperatureC = raw * 0.0625f;
+    return true;
+}
+
+void handleCommand(String cmd) {
+    cmd.trim();
+    cmd.toUpperCase();
+
+    if (cmd.startsWith("START")) {
+        int spaceIdx = cmd.indexOf(' ');
+        if (spaceIdx > 0) {
+            float freqHz = cmd.substring(spaceIdx + 1).toFloat();
+            if (freqHz > 0.0f) {
+                sampleIntervalMs = (unsigned long)(1000.0f / freqHz);
+            }
+        }
+        sendEnabled = true;
+        Serial.printf("I2C temperature streaming STARTED at %.2f Hz\n", 1000.0f / sampleIntervalMs);
+        return;
+    }
+
+    if (cmd.startsWith("STOP")) {
+        sendEnabled = false;
+        Serial.println("I2C temperature streaming STOPPED");
+        return;
+    }
+
+    if (cmd == "RESCAN") {
+        sensorCount = scanForI2CDevices(sensorAddresses, MAX_I2C_SENSORS);
+        return;
+    }
+
+    Serial.printf("Unknown cmd: %s\n", cmd.c_str());
 }
 
 void setup() {
-  Serial.begin(115200);
-  delay(200);
+    Serial.begin(115200);
+    setupAccessPoint();
+    server.begin();
+    server.setNoDelay(true);
 
-  // Start AP (self-hosted)
-  Serial.println("[WiFi] Starting AP…");
-  bool ok = WiFi.softAP(AP_SSID, AP_PASS);
-  if (!ok) {
-    Serial.println("[WiFi] AP start failed!");
-  }
-  IPAddress ip = WiFi.softAPIP(); // usually 192.168.4.1
-  Serial.print("[WiFi] AP SSID: "); Serial.println(AP_SSID);
-  Serial.print("[WiFi] AP PASS: "); Serial.println(AP_PASS);
-  Serial.print("[WiFi] AP IP:   "); Serial.println(ip);
-
-  // Start TCP server
-  server.begin();
-  server.setNoDelay(true);
-  Serial.print("[TCP] Listening on port "); Serial.println(SERVER_PORT);
-}
-
-void handleNewClient() {
-  WiFiClient incoming = server.available();
-  if (!incoming) return;
-
-  // If we already have a client, drop the older one
-  if (client && client.connected()) {
-    client.stop();
-  }
-
-  client = incoming;
-  client.setTimeout(50);
-  Serial.print("[TCP] Client connected from ");
-  Serial.println(client.remoteIP());
-
-  // optional greeting / one-shot JSON blob
-  client.print("{\"hello\":\"welcome\",\"port\":");
-  client.print(SERVER_PORT);
-  client.print(",\"hint\":\"I will stream one JSON per second. Each line is a JSON object.\"}\n");
-}
-
-void streamJsonIfTime() {
-  if (!client || !client.connected()) return;
-
-  // read & ignore any input (you could add commands here)
-  while (client.available()) {
-    (void)client.read(); // drain input
-  }
-
-  unsigned long now = millis();
-  if (now - lastSendMs >= SEND_PERIOD_MS) {
-    lastSendMs = now;
-    String line = makeJson();
-    client.print(line);     // send one JSON line
-    Serial.print("[TX] ");  // mirror to serial
-    Serial.print(line);
-  }
+    setupI2C(I2C_SDA_PIN, I2C_SCL_PIN, I2C_CLOCK_HZ);
+    sensorCount = scanForI2CDevices(sensorAddresses, MAX_I2C_SENSORS);
 }
 
 void loop() {
-  // accept new client connections
-  handleNewClient();
+    WiFiClient newClient = server.available();
+    if (newClient) {
+        if (client && client.connected()) {
+            client.stop();
+        }
+        client = newClient;
+        client.print("{\"type\":\"status\",\"msg\":\"connected\"}\n");
+        Serial.println("Backend connected");
+    }
 
-  // send JSON periodically if a client is connected
-  streamJsonIfTime();
+    if (client && client.connected() && client.available()) {
+        String cmd = client.readStringUntil('\n');
+        handleCommand(cmd);
+    }
 
-  // clean up if disconnected
-  if (client && !client.connected()) {
-    Serial.println("[TCP] Client disconnected");
-    client.stop();
-  }
+    if (!(sendEnabled && client && client.connected())) {
+        return;
+    }
+
+    unsigned long now = millis();
+    if (now - lastSendMs < sampleIntervalMs) {
+        return;
+    }
+    lastSendMs = now;
+
+    if (sensorCount == 0) {
+        client.print("{\"type\":\"warning\",\"msg\":\"no_i2c_sensors\"}\n");
+        return;
+    }
+
+    for (size_t i = 0; i < sensorCount; i++) {
+        uint8_t address = sensorAddresses[i];
+        float temperatureC = 0.0f;
+        bool success = readTemperatureC(address, temperatureC);
+
+        String json = "{";
+        json += "\"sensor\":\"" + String(SENSOR_NAME) + "\",";
+        json += "\"sensor_id\":" + String(SENSOR_ID) + ",";
+        json += "\"i2c_addr\":\"0x" + String(address, HEX) + "\",";
+        json += "\"timestamp_ms\":" + String(now) + ",";
+        json += "\"success\":" + String(success ? "true" : "false");
+        if (success) {
+            json += ",\"value_c\":" + String(temperatureC, 2);
+        }
+        json += "}\n";
+
+        client.print(json);
+    }
 }
