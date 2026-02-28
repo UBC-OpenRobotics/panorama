@@ -44,3 +44,6 @@ desktop.ini
 node_modules/
 __pycache__/
 *.pyc
+
+# Runtime directory
+rundir/

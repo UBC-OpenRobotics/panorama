@@ -1,0 +1,20 @@
+[
+  {
+    "data": 23.5,
+    "timestamp": 1706966400,
+    "dataunit": "°C",
+    "datatype": "temperature"
+  },
+  {
+    "data": 101.3,
+    "timestamp": 1706966460,
+    "dataunit": "kPa",
+    "datatype": "pressure"
+  },
+  {
+    "data": 55.0,
+    "timestamp": 1706966520,
+    "dataunit": "dB",
+    "datatype": "sound"
+  }
+]
