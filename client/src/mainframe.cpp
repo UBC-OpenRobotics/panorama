@@ -4,8 +4,10 @@
 #include "client/graph_panel.hpp"
 #include "client/sensor_data_panel.h"
 #include "client/sensor_manager.hpp"
+#include "client/sensor.hpp"
 #include <wx/dcbuffer.h>
 #include <wx/sizer.h>
+#include <functional>
 
 MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
     std::shared_ptr<DataBuffer> dataBuffer,
@@ -18,23 +20,13 @@ MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
     wxSplitterWindow* rightSplitter = new wxSplitterWindow(topSplitter, wxID_ANY);
     // Create the four main panels
     // Sensor manager panel
-    SensorManagerPanel* sensorPanel = new SensorManagerPanel(topSplitter);
+    sensorManager_ = new SensorManagerPanel(topSplitter);
 
-    // Data view area - Sensor Data Panel
-    wxArrayString sensorNames;
-    sensorNames.Add("Sensor 1");
-    sensorNames.Add("Sensor 2");
-    sensorNames.Add("Sensor 3");
-    sensorNames.Add("Sensor 4");
-    sensorNames.Add("Sensor 5");
-    sensorNames.Add("Sensor 6");
-    sensorNames.Add("Sensor 7");
-    sensorNames.Add("Sensor 8");
-    sensorNames.Add("Another one");
+    // Data view area - Sensor Data Panel (rows added dynamically as sensors arrive)
     wxPanel* dataViewPanel = new wxPanel(rightSplitter);
     dataViewPanel->SetBackgroundColour(wxColour(240, 240, 240)); 
-
-  SensorDataFrame* sensorDataGrid = new SensorDataFrame(dataViewPanel, sensorNames);
+    
+    sensorDataGrid = new SensorDataFrame(dataViewPanel, wxArrayString());
     
     wxBoxSizer* dataViewSizer = new wxBoxSizer(wxVERTICAL);
     dataViewSizer->Add(sensorDataGrid, 1, wxEXPAND);
@@ -64,7 +56,7 @@ MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
     rightSplitter->SetMinimumPaneSize(100);
     rightSplitter->SetSashGravity(0.0); // keeps data panel a 180px, graph takes extra space
     
-    topSplitter->SplitVertically(sensorPanel, rightSplitter, 200);
+    topSplitter->SplitVertically(sensorManager_, rightSplitter, 200);
     topSplitter->SetMinimumPaneSize(100);
     topSplitter->SetSashGravity(0.0); 
 
@@ -80,12 +72,22 @@ MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
     SetSizer(mainSizer);
 
     // Register as observer
-    model_->addObserver([this]() {
-        // Use CallAfter to update GUI from non-GUI thread
-        CallAfter(&MainFrame::updateMessageDisplay);
-    });
+    model_->addObserver(std::bind(&MainFrame::onModelUpdated, this));
+
+    // Register checkbox toggle callback
+    sensorManager_->SetOnSensorToggled(std::bind(&MainFrame::onSensorToggled, this));
 
     CreateStatusBar();
+}
+
+void MainFrame::onModelUpdated() {
+    // Use CallAfter to update GUI seperate from network thread or smthing
+    CallAfter(&MainFrame::updateMessageDisplay);
+    CallAfter(&MainFrame::updateDataPanel);
+}
+
+void MainFrame::onSensorToggled() {
+    sensorDataGrid->SetActiveSensors(sensorManager_->GetEnabledSensorNames());
 }
 
 void MainFrame::updateMessageDisplay() {
@@ -105,3 +107,42 @@ void MainFrame::updateMessageDisplay() {
     messageDisplay_->SetValue(text);
     messageDisplay_->SetInsertionPointEnd();
 }
+
+void MainFrame::updateDataPanel() {
+
+    /*
+    float data; // actual value
+    std::time_t timestamp; // date recorded
+    std::string dataunit; // e.g. "kPa", "mL"
+    std::string datatype; // e.g. "temperature", "sound"
+    */
+
+    //if dataBuffer has data
+    //dataBuffer_ is a list of type data_buffer_t, which has fields: datatype, data, dataunit, timestamp
+    //when this function is called, update every sensors
+    //currently we have temperature, humidity, pressure, and light
+
+    //make a loop going through the list. call the updateReading function for each element
+
+
+    if (dataBuffer_->size() > 0) {
+        for (buffer_data_t latestData : dataBuffer_->readAll()) {
+
+            // Skip entries with no data-type (first sensor reading)
+            if (latestData.datatype.empty()) continue;
+
+            // Add Sensors to sensor manager and data grid only when they are first seen
+            if (registeredSensors_.find(latestData.datatype) == registeredSensors_.end()) {
+                auto sensor = std::make_shared<Sensor>(latestData.datatype, latestData.dataunit);
+                sensorManager_->AddSensor(sensor);
+                sensorDataGrid->AddSensorRow(latestData.datatype);
+                registeredSensors_.insert(latestData.datatype);
+            }
+
+            sensorDataGrid->UpdateReading(latestData.datatype, (double)latestData.data, latestData.dataunit);
+            
+            //std::cout << "Updated " << latestData.datatype << " with value: " << latestData.data << " " << latestData.dataunit << std::endl;
+        }
+    }
+}
+
