@@ -1,26 +1,33 @@
-#include "Arduino.h"
-#include "WiFi.h"
-#include "WiFiClient.h"
-#include "WiFiServer.h"
+#include <Arduino.h>
+#include <WiFi.h>
+#include <WiFiClient.h>
+#include <WiFiServer.h>
+#include <Wire.h>
 
 // Wi-Fi Access Point credentials
-const char* SSID = "ESP32-Interface";
-const char* PASS = "12345678";
+const char *SSID = "ESP32-Interface";
+const char *PASS = "12345678";
 const uint16_t PORT = 9000;
 
 WiFiServer server(PORT);
 WiFiClient client;
 
-const int trigPin = 5;
-const int echoPin = 18;
-const unsigned long send_rate = 1000; // milliseconds
+// Stream control
+bool sendEnabled = false;
+unsigned long sampleIntervalMs = 1000;
+unsigned long lastSendMs = 0;
 
-long duration;
-float distanceCm;
+// I2C bus configuration
+const int I2C_SDA_PIN = 21;
+const int I2C_SCL_PIN = 22;
+const uint32_t I2C_CLOCK_HZ = 100000;
 
-const int pinsToScan[] = {5, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 25, 26, 27, 32, 33};
-const int numPins = sizeof(pinsToScan) / sizeof(pinsToScan[0]);
-bool sensors[numPins] = {false};
+const uint8_t SENSOR_READ_LEN = 2;
+const uint16_t SENSOR_ID = 2;
+const char *SENSOR_NAME = "ultrasonic_i2c";
+
+uint8_t sensorAddresses[16];
+size_t sensorCount = 0;
 
 void setupAccessPoint() {
     WiFi.mode(WIFI_AP);
@@ -29,29 +36,43 @@ void setupAccessPoint() {
     Serial.printf("AP started: %s (%s)\n", SSID, ip.toString().c_str());
 }
 
-
-void setupUltrasonicSensor() {
-    pinMode(trigPin, OUTPUT);
-    pinMode(echoPin, INPUT);
+void setupI2C() {
+    Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN, I2C_CLOCK_HZ);
+    Serial.printf("I2C started on SDA=%d SCL=%d @ %lu Hz\n", I2C_SDA_PIN, I2C_SCL_PIN, I2C_CLOCK_HZ);
 }
 
-float readUltrasonicSensor() {
-    // Clear the trigPin
-    digitalWrite(trigPin, LOW);
-    delayMicroseconds(2);
+void scanForI2CDevices() {
+    sensorCount = 0;
 
-    // Set the trigPin HIGH for 10 microseconds
-    digitalWrite(trigPin, HIGH);
-    delayMicroseconds(10);
-    digitalWrite(trigPin, LOW);
+    for (uint8_t address = 1; address < 127; address++) {
+        Wire.beginTransmission(address);
+        if (Wire.endTransmission() == 0) {
+            if (sensorCount < (sizeof(sensorAddresses) / sizeof(sensorAddresses[0]))) {
+                sensorAddresses[sensorCount++] = address;
+            }
+            Serial.printf("I2C device found at 0x%02X\n", address);
+        }
+    }
 
-    // Read the echoPin, returns the sound wave travel time in microseconds
-    long duration = pulseIn(echoPin, HIGH, 25000);
+    if (sensorCount == 0) {
+        Serial.println("No I2C devices found");
+    } else {
+        Serial.printf("Total I2C devices tracked: %u\n", (unsigned int)sensorCount);
+    }
+}
 
-    // Calculate the distance in centimeters
-    float distanceCm = (duration * 0.0343) / 2;
+bool readDistanceCmFromI2C(uint8_t address, float &distanceCm) {
+    int received = Wire.requestFrom((int)address, (int)SENSOR_READ_LEN);
+    if (received != SENSOR_READ_LEN) {
+        while (Wire.available()) {
+            (void)Wire.read();
+        }
+        return false;
+    }
 
-    return distanceCm;
+    uint16_t raw = ((uint16_t)Wire.read() << 8) | Wire.read();
+    distanceCm = raw / 10.0f;
+    return true;
 }
 
 void handleCommand(String cmd) {
@@ -59,96 +80,89 @@ void handleCommand(String cmd) {
     cmd.toUpperCase();
 
     if (cmd.startsWith("START")) {
-        Serial.println("Ultrasonic data transmission STARTED");
-    } else if (cmd.startsWith("STOP")) {
-        Serial.println("Ultrasonic data transmission STOPPED");
-    } else {
-        Serial.printf("Unknown cmd: %s\n", cmd.c_str());
+        int spaceIdx = cmd.indexOf(' ');
+        if (spaceIdx > 0) {
+            float freqHz = cmd.substring(spaceIdx + 1).toFloat();
+            if (freqHz > 0.0f) {
+                sampleIntervalMs = (unsigned long)(1000.0f / freqHz);
+            }
+        }
+        sendEnabled = true;
+        Serial.printf("I2C streaming STARTED at %.2f Hz\n", 1000.0f / sampleIntervalMs);
+        return;
     }
-}
 
+    if (cmd.startsWith("STOP")) {
+        sendEnabled = false;
+        Serial.println("I2C streaming STOPPED");
+        return;
+    }
+
+    if (cmd == "RESCAN") {
+        scanForI2CDevices();
+        return;
+    }
+
+    Serial.printf("Unknown cmd: %s\n", cmd.c_str());
+}
 
 void setup() {
     Serial.begin(115200);
-
-    for (int i = 0; i < numPins; i++) {
-        pinMode(pinsToScan[i], INPUT_PULLUP);
-    }
-
-    setupAccessPoint(); 
+    setupAccessPoint();
     server.begin();
     server.setNoDelay(true);
 
-    setupUltrasonicSensor();
+    setupI2C();
+    scanForI2CDevices();
 }
 
 void loop() {
-    // accept new client
     WiFiClient newClient = server.available();
     if (newClient) {
-        if (client && client.connected()) client.stop();
+        if (client && client.connected()) {
+            client.stop();
+        }
         client = newClient;
         client.print("{\"type\":\"status\",\"msg\":\"connected\"}\n");
         Serial.println("Backend connected");
     }
 
-    // read commands
     if (client && client.connected() && client.available()) {
         String cmd = client.readStringUntil('\n');
         handleCommand(cmd);
     }
 
-    // send ultrasonic data
-    static unsigned long lastSend = 0;
-
-    if (client && client.connected()) {
-        client.print("Polling for connected sensors");
-        for (int i = 0; i < numPins; i++) {
-            if (digitalRead(pinsToScan[i]) == LOW) {
-                client.print("Sensor detected at GPIO ");
-                client.print(pinsToScan[i]);
-                client.print("\n");
-                sensors[i] = true;
-            }
-        }
-
-        
-
-        // for (int i = 0; i < numPins; i++) {
-        //     if (sensors[i]) {
-        //         trigPin = pinsToScan[i];
-        //         sensors[i] = false;
-        //         break;
-        //     }
-        // }
-        // if (millis() - lastSend >= send_rate) {
-        // lastSend = millis();
-        // float distance = readUltrasonicSensor();
-        // unsigned long timestamp = millis();
-
-        // String json =
-        //     "{"
-        //     "\"sensor\":\"" + String(SENSOR_NAME) + "\","
-        //     "\"sensor_id\":" + String(SENSOR_ID) + ","
-        //     "\"timestamp_ms\":" + String(timestamp) + ","
-        //     "\"value\":" + String(distance, 2) +
-        //     "}\n";
-
-        // client.print(json);
-        // }
+    if (!(sendEnabled && client && client.connected())) {
+        return;
     }
-    return;
+
+    unsigned long now = millis();
+    if (now - lastSendMs < sampleIntervalMs) {
+        return;
+    }
+    lastSendMs = now;
+
+    if (sensorCount == 0) {
+        client.print("{\"type\":\"warning\",\"msg\":\"no_i2c_sensors\"}\n");
+        return;
+    }
+
+    for (size_t i = 0; i < sensorCount; i++) {
+        uint8_t address = sensorAddresses[i];
+        float distanceCm = 0.0f;
+        bool ok = readDistanceCmFromI2C(address, distanceCm);
+
+        String json = "{";
+        json += "\"sensor\":\"" + String(SENSOR_NAME) + "\",";
+        json += "\"sensor_id\":" + String(SENSOR_ID) + ",";
+        json += "\"i2c_addr\":\"0x" + String(address, HEX) + "\",";
+        json += "\"timestamp_ms\":" + String(now) + ",";
+        json += "\"ok\":" + String(ok ? "true" : "false");
+        if (ok) {
+            json += ",\"value_cm\":" + String(distanceCm, 2);
+        }
+        json += "}\n";
+
+        client.print(json);
+    }
 }
-
-
-/*
-Notes:
-how can we figure out which sensor is connected to which pin
-    - should we scan all pins every loop, or just one pin at a time
-    - maybe when backend connects can send message indicating type of sensor
-      and which pins to scan
-    - use i2c to identify addresses of connected sensors
-for how we are sending data
-    - right now sending JSON strings over TCP
-    - do we want to switch to use HTTP packets instead of strings?
-*/
