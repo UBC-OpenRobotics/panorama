@@ -13,6 +13,7 @@
 #include "client/config_manager.hpp"
 #include "client/data_logger.hpp"
 #include "client/json_writer.hpp"
+#include "client/command_processor.hpp"
 #include <iostream>
 using namespace std;
 
@@ -135,6 +136,11 @@ public:
         // --- Create DataBuffer ---
         dataBuffer_ = std::make_shared<DataBuffer>(runtimeDir + "/data");
 
+        // --- Create CommandProcessor on a separate thread---
+        cmdProcessor_ = std::make_shared<CommandProcessor>(dataBuffer_);
+        cmdThread_ = std::make_unique<std::thread>(&CommandProcessor::start, cmdProcessor_);
+        
+
         // --- Create and start TCP client on separate thread ---
         std::string tcpHost;
         int tcpPort;
@@ -189,6 +195,15 @@ public:
             tcpClient_->stop();
         }
 
+        if (cmdProcessor_) {
+            cmdProcessor_->stop();
+        }
+
+        if (cmdThread_ && cmdThread_->joinable()) {
+            cmdThread_->join();
+        }
+
+
         // Clean shutdown of JSON writer
         if (jsonWriter_) {
             jsonWriter_->stop();
@@ -206,6 +221,8 @@ private:
     std::shared_ptr<DataLogger> dataLogger_;
     std::shared_ptr<DataBuffer> dataBuffer_;
     std::unique_ptr<TcpClient> tcpClient_;
+    std::shared_ptr<CommandProcessor> cmdProcessor_;
+    std::unique_ptr<std::thread> cmdThread_;
     std::shared_ptr<JsonWriter> jsonWriter_;
     std::unique_ptr<std::thread> jsonWriterThread_;
 };
