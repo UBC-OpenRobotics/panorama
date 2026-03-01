@@ -66,6 +66,7 @@ void CommandProcessor::processCommand(const std::string& command) {
 
     } else {
         std::cout << "Unknown command: " << command << std::endl;
+        
     }
 
     //add more commands as needed
