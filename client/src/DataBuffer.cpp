@@ -144,6 +144,11 @@ std::string DataBuffer::toStringAll() {
     return res;
 }
 
+void DataBuffer::printAll() {
+    //print all buffer_ as string
+    std::cout << toStringAll() << std::endl;
+}
+
 void DataBuffer::exportBuffer(std::string exportPath) {
     //Export the entire buffer (make a local JSON file under client/src/)
     
@@ -162,31 +167,3 @@ void DataBuffer::exportBuffer(std::string exportPath) {
     fclose(fp);
     return;
 }
-
-/*
-void DataBuffer::replaceData(std::string dataType, float targetValue) {
-    //replace all data of type dataType in buffer_ with targetValue
-    std::lock_guard<std::mutex> lock(mutex_);
-
-    std::cout << "Replacing data of type " << dataType << " with value " << targetValue << std::endl;
-    std::cout << "Buffer before replaceData: " << toStringAll() << std::endl;
-
-    for (auto& item : readAll()) {
-        if (item.datatype == dataType) {
-            item.data = targetValue;
-            std::cout << "Replaced data of type " << dataType << " with value " << targetValue << std::endl;
-        }
-    }
-}
-
-void DataBuffer::addOffset(std::string dataType, float offsetValue) {
-    //add offsetValue to all data of type dataType in buffer_
-    std::lock_guard<std::mutex> lock(mutex_);
-
-    for (auto& item : readAll()) {
-        if (item.datatype == dataType) {
-            item.data += offsetValue;
-        }
-    }
-}
-*/
