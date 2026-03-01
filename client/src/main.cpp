@@ -136,6 +136,11 @@ public:
         // --- Create DataBuffer ---
         dataBuffer_ = std::make_shared<DataBuffer>(runtimeDir + "/data");
 
+        // --- Create CommandProcessor on a separate thread---
+        cmdProcessor_ = std::make_shared<CommandProcessor>(dataBuffer_);
+        cmdThread_ = std::make_unique<std::thread>(&CommandProcessor::start, cmdProcessor_);
+        
+
         // --- Create and start TCP client on separate thread ---
         std::string tcpHost;
         int tcpPort;
@@ -213,6 +218,15 @@ public:
             jsonWriterThread_->join();
         }
 
+
+        if (cmdProcessor_) {
+            cmdProcessor_->stop();
+        }
+
+        if (cmdThread_ && cmdThread_->joinable()) {
+            cmdThread_->join();
+        }
+
         return wxApp::OnExit();
     }
 
@@ -225,6 +239,8 @@ private:
     std::unique_ptr<std::thread> cmdThread_;
     std::shared_ptr<JsonWriter> jsonWriter_;
     std::unique_ptr<std::thread> jsonWriterThread_;
+    std::shared_ptr<CommandProcessor> cmdProcessor_;
+    std::unique_ptr<std::thread> cmdThread_;
 };
 
 wxIMPLEMENT_APP(PanoramaClient);

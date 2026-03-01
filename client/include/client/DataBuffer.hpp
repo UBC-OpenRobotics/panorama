@@ -67,6 +67,10 @@ public:
 
     void exportBuffer(std::string exportPath);
 
+    void convertData(std::string dataType, std::string targetUnit);
+
+    void addOffset(std::string dataType, float offsetValue);
+
 private:
     // Raw buffer storing incoming data
     std::list<buffer_data_t> buffer_;
