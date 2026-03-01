@@ -162,3 +162,39 @@ void DataBuffer::exportBuffer(std::string exportPath) {
     fclose(fp);
     return;
 }
+
+void DataBuffer::convertData(std::string dataType, std::string targetUnit) {
+    //convert all data of type dataType in buffer_ to targetUnit
+    //e.g. if dataType = "temperature" and targetUnit = "F", convert all temperature data in buffer_ to Fahrenheit
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    for (auto& item : buffer_) {
+        if (item.datatype == dataType) {
+            if (dataType == "temperature") {
+                if (targetUnit == "farenheit") {
+                    // Convert Celsius to Fahrenheit
+                    item.data = item.data * 9.0 / 5.0 + 32;
+                    item.dataunit = "farenheit";
+                } else if (targetUnit == "celcius") {
+                    // Convert Fahrenheit to Celsius
+                    item.data = (item.data - 32) * 5.0 / 9.0;
+                    item.dataunit = "celcius";
+                }
+            }
+            // Add more data types and unit conversions as needed
+        }
+    }
+}
+
+void DataBuffer::addOffset(std::string dataType, float offsetValue) {
+    //add offsetValue to all data of type dataType in buffer_
+    //e.g. if dataType = "temperature" and offsetValue = "5", add 5 to all temperature data in buffer_
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    //TO DO: print to the screen the buffer data after adding offset for debugging
+    for (auto& item : buffer_) {
+        if (item.datatype == dataType) {
+            item.data += offsetValue;
+        }
+    }
+}

@@ -12,6 +12,7 @@
 #include "client/json_reader.hpp"
 #include "client/config_manager.hpp"
 #include "client/data_logger.hpp"
+#include "client/command_processor.hpp"
 #include <iostream>
 using namespace std;
 
@@ -134,6 +135,11 @@ public:
         // --- Create DataBuffer ---
         dataBuffer_ = std::make_shared<DataBuffer>(runtimeDir + "/data");
 
+        // --- Create CommandProcessor on a separate thread---
+        cmdProcessor_ = std::make_shared<CommandProcessor>(dataBuffer_);
+        cmdThread_ = std::make_unique<std::thread>(&CommandProcessor::start, cmdProcessor_);
+        
+
         // --- Create and start TCP client on separate thread ---
         tcpClient_ = std::make_unique<TcpClient>("127.0.0.1", 3000, model_, dataBuffer_, dataLogger_);
         tcpClient_->start();
@@ -172,6 +178,15 @@ public:
         if (tcpClient_) {
             tcpClient_->stop();
         }
+
+        if (cmdProcessor_) {
+            cmdProcessor_->stop();
+        }
+
+        if (cmdThread_ && cmdThread_->joinable()) {
+            cmdThread_->join();
+        }
+
         return wxApp::OnExit();
     }
 
@@ -180,6 +195,8 @@ private:
     std::shared_ptr<DataLogger> dataLogger_;
     std::shared_ptr<DataBuffer> dataBuffer_;
     std::unique_ptr<TcpClient> tcpClient_;
+    std::shared_ptr<CommandProcessor> cmdProcessor_;
+    std::unique_ptr<std::thread> cmdThread_;
 };
 
 wxIMPLEMENT_APP(PanoramaClient);

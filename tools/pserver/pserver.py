@@ -25,7 +25,7 @@ class PServer:
             while True:
                 data = streamer.get_data(timeout=2.0)
                 if data is None:
-                    pwarning("PServer", "No data available from streamer")
+                    #pwarning("PServer", "No data available from streamer")
                     continue
                 
                 client_socket.sendall(data)
@@ -49,7 +49,7 @@ def main():
     server = PServer()
 
     streamer = PStreamer()
-    streamer.build_stream(PStreamJSON()).set_interval(0.4)
+    streamer.build_stream(PStreamJSON()).set_interval(10.0) # Set interval to 10 seconds for testing
 
     streamer.start()
 

@@ -15,6 +15,7 @@ set(CLIENT_SOURCES
     src/config_manager.cpp
     src/data_logger.cpp
     src/settings_dialog.cpp
+    src/command_processor.cpp
 )
 
 set(COMMON_HEADERS
@@ -37,6 +38,7 @@ set(CLIENT_HEADERS
     include/client/config_manager.hpp
     include/client/data_logger.hpp
     include/client/settings_dialog.hpp
+    include/client/command_processor.hpp
 )
 
 # Executable settings
