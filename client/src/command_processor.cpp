@@ -22,6 +22,7 @@ void CommandProcessor::start() {
                 break;
             }
 
+            
             processCommand(command);
         }
 }
@@ -33,8 +34,7 @@ void CommandProcessor::stop() {
 void CommandProcessor::processCommand(const std::string& command) {
     /*
     command:
-        conversion <data_type> <target_unit>
-        add_offset <data_type> <offset_value>
+        <function> <parameter1> <parameter2>
     */
     std::string cmdType = command.substr(0, command.find(' '));
 
@@ -44,11 +44,18 @@ void CommandProcessor::processCommand(const std::string& command) {
     std::string firstParameter = command.substr(firstSpace + 1, secondSpace - firstSpace - 1);
     std::string secondParameter = command.substr(secondSpace + 1);
 
-    if(cmdType == "conversion") {
-        dataBuffer_->convertData(firstParameter, secondParameter);
-    } else if (cmdType == "add_offset") {
-        dataBuffer_->addOffset(firstParameter, std::stof(secondParameter));
+    if(cmdType == "toStringAll") {
+        std::cout << dataBuffer_->toStringAll() << std::endl;
+        
+    } else if (cmdType == "clear") {
+        dataBuffer_->clear();
+
+    } else if (cmdType == "size"){
+        std::cout << "Buffer size: " << dataBuffer_->size() << std::endl;
+
     } else {
         std::cout << "Unknown command: " << command << std::endl;
+        
     }
+
 }

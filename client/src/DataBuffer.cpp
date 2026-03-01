@@ -163,38 +163,30 @@ void DataBuffer::exportBuffer(std::string exportPath) {
     return;
 }
 
-void DataBuffer::convertData(std::string dataType, std::string targetUnit) {
-    //convert all data of type dataType in buffer_ to targetUnit
-    //e.g. if dataType = "temperature" and targetUnit = "F", convert all temperature data in buffer_ to Fahrenheit
+/*
+void DataBuffer::replaceData(std::string dataType, float targetValue) {
+    //replace all data of type dataType in buffer_ with targetValue
     std::lock_guard<std::mutex> lock(mutex_);
 
-    for (auto& item : buffer_) {
+    std::cout << "Replacing data of type " << dataType << " with value " << targetValue << std::endl;
+    std::cout << "Buffer before replaceData: " << toStringAll() << std::endl;
+
+    for (auto& item : readAll()) {
         if (item.datatype == dataType) {
-            if (dataType == "temperature") {
-                if (targetUnit == "farenheit") {
-                    // Convert Celsius to Fahrenheit
-                    item.data = item.data * 9.0 / 5.0 + 32;
-                    item.dataunit = "farenheit";
-                } else if (targetUnit == "celcius") {
-                    // Convert Fahrenheit to Celsius
-                    item.data = (item.data - 32) * 5.0 / 9.0;
-                    item.dataunit = "celcius";
-                }
-            }
-            // Add more data types and unit conversions as needed
+            item.data = targetValue;
+            std::cout << "Replaced data of type " << dataType << " with value " << targetValue << std::endl;
         }
     }
 }
 
 void DataBuffer::addOffset(std::string dataType, float offsetValue) {
     //add offsetValue to all data of type dataType in buffer_
-    //e.g. if dataType = "temperature" and offsetValue = "5", add 5 to all temperature data in buffer_
     std::lock_guard<std::mutex> lock(mutex_);
 
-    //TO DO: print to the screen the buffer data after adding offset for debugging
-    for (auto& item : buffer_) {
+    for (auto& item : readAll()) {
         if (item.datatype == dataType) {
             item.data += offsetValue;
         }
     }
 }
+*/

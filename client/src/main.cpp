@@ -134,10 +134,6 @@ public:
 
         // --- Create DataBuffer ---
         dataBuffer_ = std::make_shared<DataBuffer>(runtimeDir + "/data");
-
-        // --- Create CommandProcessor on a separate thread---
-        cmdProcessor_ = std::make_shared<CommandProcessor>(dataBuffer_);
-        cmdThread_ = std::make_unique<std::thread>(&CommandProcessor::start, cmdProcessor_);
         
 
         // --- Create and start TCP client on separate thread ---
@@ -154,6 +150,10 @@ public:
             }
             return true;
         }
+
+        // --- Create CommandProcessor on a separate thread---
+        cmdProcessor_ = std::make_shared<CommandProcessor>(dataBuffer_);
+        cmdThread_ = std::make_unique<std::thread>(&CommandProcessor::start, cmdProcessor_);
 
         // --- Create view ---
         MainFrame* w = new MainFrame("Panorama Client", model_, dataBuffer_);
