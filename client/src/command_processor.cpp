@@ -44,8 +44,8 @@ void CommandProcessor::processCommand(const std::string& command) {
     std::string firstParameter = command.substr(firstSpace + 1, secondSpace - firstSpace - 1);
     std::string secondParameter = command.substr(secondSpace + 1);
 
-    if(cmdType == "toStringAll") {
-        std::cout << dataBuffer_->toStringAll() << std::endl;
+    if(cmdType == "printAll") {
+        dataBuffer_->printAll();
         
     } else if (cmdType == "clear") {
         dataBuffer_->clear();
@@ -58,4 +58,5 @@ void CommandProcessor::processCommand(const std::string& command) {
         
     }
 
+    //add more commands as needed
 }

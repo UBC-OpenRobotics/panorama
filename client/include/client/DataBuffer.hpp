@@ -63,6 +63,8 @@ public:
 
     std::string toStringAll();
 
+    void printAll();
+
     void exportBuffer(std::string exportPath);
 
 private:
