@@ -4,7 +4,7 @@
 typedef struct {
     float data; // actual value
     std::time_t timestamp; // date recorded
-    const char * dataunit; // e.g. "kPa", "mL"
-    const char * datatype; // e.g. "temperature", "sound"
+    std::string dataunit; // e.g. "kPa", "mL"
+    std::string datatype; // e.g. "temperature", "sound"
 
 } buffer_data_t;   

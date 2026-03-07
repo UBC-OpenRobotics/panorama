@@ -78,3 +78,7 @@ void DataLogger::close() {
         logFile_.close();
     }
 }
+
+std::string DataLogger::getLogFilePath() {
+    return logFilePath_;
+}

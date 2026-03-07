@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 import requests
 import numpy as np
 import matplotlib.pyplot as plt
@@ -28,18 +27,6 @@ time, true_signal, noisy_graph = noisy_data(0, 50, 100, 2)
 # plt.show() 
 
 response = requests.get("http127.0.0.1:8080")
-=======
-#!/usr/bin/env python3
-"""
-esp32_client.py
----------------
-A simple TCP client that connects to the ESP32 emulator (server)
-and prints telemetry data as it is received.
-
-Usage:
-  python esp32_client.py --host localhost --port 7000
-"""
->>>>>>> Stashed changes
 
 import socket
 import argparse

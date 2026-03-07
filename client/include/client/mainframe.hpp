@@ -11,6 +11,10 @@
 #include <vector>
 #include <memory>
 #include <map>
+#include "client/sensor_data_panel.h"
+#include "client/sensor_manager.hpp"
+#include "client/sensor.hpp"
+#include <set>
 
 
 class MessageModel;
@@ -40,8 +44,16 @@ public:
         const wxSize& size = wxSize(1200, 800));
 
 private:
+    void onModelUpdated();
+    void onSensorToggled();
     void CreateMenuBar();
     void updateMessageDisplay();
+    void updateDataPanel();
+    SensorDataFrame* sensorDataGrid;
+    SensorManagerPanel* sensorManager_;
+
+    //List of sensors in sensor manager
+    std::set<std::string> registeredSensors_; 
 
     void OnFileNew(wxCommandEvent& event);
     void OnFileOpen(wxCommandEvent& event);

@@ -93,13 +93,13 @@ public:
                 return false;
             }
 
-            // Initialize database
-            if (!config.initializeDatabase()) {
+            // Init config
+            if (!config.initializeConfig()) {
                 if (!parser.isNoGuiMode()) {
-                    wxMessageBox("Failed to initialize configuration database.",
+                    wxMessageBox("Failed to initialize configuration.",
                                 "Error", wxOK | wxICON_ERROR);
                 } else {
-                    std::cerr << "Failed to initialize configuration database" << std::endl;
+                    std::cerr << "Failed to initialize configuration" << std::endl;
                 }
                 return false;
             }
@@ -115,9 +115,9 @@ public:
                 return false;
             }
 
-            // Open existing database
-            if (!config.initializeDatabase()) {
-                std::cerr << "Failed to open configuration database" << std::endl;
+            // Open existing config
+            if (!config.initializeConfig()) {
+                std::cerr << "Failed to open configuration" << std::endl;
                 return false;
             }
         }
@@ -132,7 +132,7 @@ public:
         }
 
         // --- Create DataBuffer ---
-        dataBuffer_ = std::make_shared<DataBuffer>();
+        dataBuffer_ = std::make_shared<DataBuffer>(runtimeDir + "/data");
 
         // --- Create and start TCP client on separate thread ---
         tcpClient_ = std::make_unique<TcpClient>("127.0.0.1", 3000, model_, dataBuffer_, dataLogger_);
@@ -142,7 +142,7 @@ public:
         if (parser.isNoGuiMode()) {
             cout << "Running in console mode (no GUI). Press Ctrl+C to exit.\n";
             cout << "Listening for JSON stream...\n\n";
-            
+
             while (true) {
                 std::this_thread::sleep_for(std::chrono::seconds(1)); // Run forever in console
             }
