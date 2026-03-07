@@ -84,6 +84,17 @@ void SensorDataFrame::InitializeGrid() {
     }
 }
 
+void SensorDataFrame::AddSensorRow(const std::string& sensorName) {
+    int newRow = grid_->GetNumberRows();
+    grid_->AppendRows(1);
+    grid_->SetCellValue(newRow, 0, sensorName);
+    grid_->SetCellValue(newRow, 1, "--");
+    grid_->SetCellValue(newRow, 2, "No data");
+    grid_->SetCellAlignment(newRow, 1, wxALIGN_CENTER, wxALIGN_CENTER);
+    grid_->SetCellAlignment(newRow, 2, wxALIGN_CENTER, wxALIGN_CENTER);
+    grid_->ForceRefresh();
+}
+
 void SensorDataFrame::UpdateReading(const std::string& sensorName, double value, const std::string& unit) {
     int row = FindSensorRow(sensorName);
     if (row == -1) return;
@@ -95,6 +106,8 @@ void SensorDataFrame::UpdateReading(const std::string& sensorName, double value,
     
     wxString timestamp = wxDateTime::Now().FormatISOTime();
     grid_->SetCellValue(row, 2, timestamp);
+
+    //std::cout << "Updated " << sensorName << " with value: " << valueStr.ToStdString() << " at " << timestamp.ToStdString() << std::endl;
     
     // Color 
     if (value > 50.0) {
@@ -114,19 +127,9 @@ void SensorDataFrame::ClearReadings() {
 
 void SensorDataFrame::SetActiveSensors(const std::vector<std::string>& sensors) {
     for (int i = 0; i < grid_->GetNumberRows(); ++i) {
-        wxString sensorName = grid_->GetCellValue(i, 0);
-        bool isActive = std::find(sensors.begin(), sensors.end(), 
-            sensorName.ToStdString()) != sensors.end();
-
-    if (!isActive) {
-            grid_->SetCellTextColour(i, 0, *wxLIGHT_GREY);
-        grid_->SetCellTextColour(i, 1, *wxLIGHT_GREY);
-            grid_->SetCellTextColour(i, 2, *wxLIGHT_GREY);
-    } else {
-      grid_->SetCellTextColour(i, 0, *wxBLACK);
-            grid_->SetCellTextColour(i, 1, *wxBLACK);
-          grid_->SetCellTextColour(i, 2, *wxBLACK);
-     }
+        std::string name = grid_->GetCellValue(i, 0).ToStdString();
+        bool isActive = std::find(sensors.begin(), sensors.end(), name) != sensors.end();
+        grid_->SetRowSize(i, isActive ? 20 : 0);
     }
     grid_->ForceRefresh();
 }

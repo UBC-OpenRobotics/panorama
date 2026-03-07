@@ -31,6 +31,7 @@ void DataBuffer::writeData(buffer_data_t jsonChunk) {
         popFront();
         exportBuffer(logFilePath_);
     }
+
     // std::cout << "[DataBuffer]   Buffer size after write: " << size() << std::endl;
     // std::cout << buffer_.size();
     // std::cout << "[DataBuffer] : " << toStringAll() << std::endl;
