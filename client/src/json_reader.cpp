@@ -54,20 +54,49 @@ buffer_data_t JsonReader::exportToBuffer(std::string json) {
         return ret;
     }
 
-    std::string sensorTypeString (
-        doc["sensor"].GetString(),
-        doc["sensor"].GetStringLength()
-    );
-    std::string sensorUnitString (
-        doc["unit"].GetString(),
-        doc["unit"].GetStringLength()
-    );
-    double sensorValue = doc["value"].GetDouble();
+    ret.sensor = "";
+    ret.datatype = "";
+    ret.dataunit = "";
+    ret.data = 0;
+    ret.timestamp = NULL;
 
-    ret.datatype = sensorTypeString.c_str();
-    ret.data = sensorValue;
-    ret.dataunit = sensorUnitString.c_str();
-    ret.timestamp = std::time(nullptr);
+    if (doc.HasMember("sensor")) {
+        std::string sensorTypeString (
+            doc["sensor"].GetString(),
+            doc["sensor"].GetStringLength()
+        );
+        ret.sensor = sensorTypeString.c_str();
+    }
+    if (doc.HasMember("dataunit")) {
+        std::string sensorUnitString (
+            doc["dataunit"].GetString(),
+            doc["dataunit"].GetStringLength()
+        );
+        ret.dataunit = sensorUnitString.c_str();
+    }
+    if (doc.HasMember("data")) {
+        double sensorValue = doc["data"].GetDouble();
+        ret.data = sensorValue;
+    }
+    if (doc.HasMember("datatype")) {
+        std::string sensorUnitString (
+            doc["datatype"].GetString(),
+            doc["datatype"].GetStringLength()
+        );
+        ret.datatype = sensorUnitString.c_str();
+    }
+    if (doc.HasMember("timestamp")) {
+        std::time_t sensorUnitString (
+            doc["timestamp"].GetFloat()
+        );
+        ret.timestamp = sensorUnitString;
+    }
+
+    
+    
+    
+    
+    //ret.timestamp = std::time(nullptr);
 
     return ret;
 
