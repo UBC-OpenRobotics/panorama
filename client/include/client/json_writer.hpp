@@ -12,6 +12,8 @@
 #include "client/DataBuffer.hpp"
 #include <memory>
 #include <atomic>
+#include <thread>
+#include <chrono>
 
 
 class DataBuffer;
@@ -27,7 +29,7 @@ public:
     bool writeToJson(buffer_data_t data); 
 
     Document getDocumentFromData(buffer_data_t data);
-    
+
 private:
     std::time_t previousTimestamp = 0;
     std::atomic<bool> running_{true};

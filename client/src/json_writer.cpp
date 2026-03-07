@@ -14,6 +14,8 @@ JsonWriter::JsonWriter(std::shared_ptr<DataBuffer> dataBuffer, const std::string
 void JsonWriter::start() {
     // This function will run in a separate thread and continuously check for new data in the DataBuffer.
     while (running_) {
+        //sleep for 10 milliseconds to avoid busy waiting
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
         if(dataBuffer_->readAll().size() > 0) {
             buffer_data_t latestData = dataBuffer_->readAll().back(); // Get the most recent data entry
