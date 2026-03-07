@@ -28,7 +28,7 @@ public:
     // returns boolean if has been written to 
     bool writeToJson(buffer_data_t data); 
 
-    Document getDocumentFromData(buffer_data_t data);
+    rapidjson::Document getDocumentFromData(buffer_data_t data);
 
 private:
     std::time_t previousTimestamp = 0;

@@ -55,12 +55,12 @@ class PStreamJSON(PStreamBase):
         json_obj["sequence"] = self.counter
 
         # Add variation to the values
-        if json_obj["sensor"] == "temperature":
-            json_obj["value"] = 25.5 + (self.counter % 10) * 0.5
-        elif json_obj["sensor"] == "humidity":
-            json_obj["value"] = 60.2 + (self.counter % 10) * 0.3
-        elif json_obj["sensor"] == "pressure":
-            json_obj["value"] = 1013.25 + (self.counter % 10) * 0.1
+        if json_obj["datatype"] == "temperature":
+            json_obj["data"] = 25.5 + (self.counter % 10) * 0.5
+        elif json_obj["datatype"] == "humidity":
+            json_obj["data"] = 60.2 + (self.counter % 10) * 0.3
+        elif json_obj["datatype"] == "pressure":
+            json_obj["data"] = 1013.25 + (self.counter % 10) * 0.1
 
         self.counter += 1
 

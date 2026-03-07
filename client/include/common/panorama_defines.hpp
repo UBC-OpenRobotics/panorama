@@ -1,5 +1,6 @@
 #pragma once
 #include <ctime>
+#include <string>
 
 typedef struct {
     float data; // actual value

@@ -40,7 +40,7 @@ void JsonWriter::stop() {
 }
 
 bool JsonWriter::writeToJson(buffer_data_t data) {
-    Document doc = getDocumentFromData(data);
+    rapidjson::Document doc = getDocumentFromData(data);
 
     // open/create document in rundir with name of sensorID
     std::string path = exportPath + "/" + std::to_string(data.sensorID);
@@ -65,16 +65,27 @@ bool JsonWriter::writeToJson(buffer_data_t data) {
     return true; // stub
 }
 
-Document JsonWriter::getDocumentFromData(buffer_data_t data) {
-    Document doc;
+rapidjson::Document JsonWriter::getDocumentFromData(buffer_data_t data) {
+    rapidjson::Document doc;
     doc.SetObject();
-    Document::AllocatorType& allocator = doc.GetAllocator();
+    rapidjson::Document::AllocatorType& allocator = doc.GetAllocator();
 
-    doc.AddMember("data", data.data, allocator);
-    doc.AddMember("timestamp", data.timestamp, allocator);
-    doc.AddMember("dataunit", data.dataunit, allocator);
-    doc.AddMember("datatype", data.datatype, allocator);
-    doc.AddMember("sensor", data.sensor, allocator);
+    doc.AddMember("data", static_cast<double>(data.data), allocator);
+
+    doc.AddMember("timestamp", static_cast<int64_t>(data.timestamp), allocator);
+
+    rapidjson::Value unit;
+    unit.SetString(data.dataunit.c_str(), static_cast<rapidjson::SizeType>(data.dataunit.length()), allocator);
+    doc.AddMember("dataunit", unit, allocator);
+
+    rapidjson::Value type;
+    type.SetString(data.datatype.c_str(), static_cast<rapidjson::SizeType>(data.datatype.length()), allocator);
+    doc.AddMember("datatype", type, allocator);
+
+    rapidjson::Value sensor;
+    sensor.SetString(data.sensor.c_str(), static_cast<rapidjson::SizeType>(data.sensor.length()), allocator);
+    doc.AddMember("sensor", sensor, allocator);
+
     doc.AddMember("sensorID", data.sensorID, allocator);
 
     return doc;
