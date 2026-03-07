@@ -1,0 +1,9 @@
+# Strip ESP32/toolchain flags that clang (x86 host) doesn't support when used for IDE diagnostics.
+# Use headers from the compiler in compile_commands.json so stdlib.h and other toolchain headers are found.
+CompileFlags:
+  BuiltinHeaders: QueryDriver
+  Remove:
+    - -mlongcalls
+    - -mlong-calls
+    - -fstrict-volatile-bitfields
+    - -fno-tree-switch-conversion
