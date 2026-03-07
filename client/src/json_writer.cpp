@@ -42,8 +42,10 @@ void JsonWriter::stop() {
 bool JsonWriter::writeToJson(buffer_data_t data) {
     Document doc = getDocumentFromData(data);
 
-    // open/create document with name of sensorID
-    FILE* fp = fopen((std::to_string(data.sensorID)).c_str(), "wb");
+    // open/create document in rundir with name of sensorID
+    std::string path = exportPath + "/" + std::to_string(data.sensorID);
+
+    FILE* fp = fopen(path.c_str(), "wb");
     if (!fp) { 
         // file couldnt open - return false
         return false;

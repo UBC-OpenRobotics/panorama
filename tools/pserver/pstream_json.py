@@ -11,24 +11,36 @@ class PStreamJSON(PStreamBase):
         self.counter = 0
         self.sample_data = [
             {
-                "sensor": "temperature",
-                "value": 25.5,
-                "unit": "celsius"
+                "data": 25.5,
+                "timestamp": 123032032,
+                "dataunit": "K",
+                "datatype": "temperature",
+                "sensor:": "TM1000",
+                "sensorID": 1
             },
             {
-                "sensor": "humidity",
-                "value": 60.2,
-                "unit": "percent"
+                "data": 60.2,
+                "timestamp": 123032032,
+                "dataunit": "watercontent",
+                "datatype": "humidity",
+                "sensor:": "HD1000",
+                "sensorID": 2
             },
             {
-                "sensor": "pressure",
-                "value": 1013.25,
-                "unit": "hPa"
+                "data": 1013.25,
+                "timestamp": 123032032,
+                "dataunit": "hPa",
+                "datatype": "pressure",
+                "sensor:": "PP1000",
+                "sensorID": 3
             },
             {
-                "sensor": "light",
-                "value": 0.2,
-                "unit": "nm"
+                "data": 0.2,
+                "timestamp": 123032032,
+                "dataunit": "nm",
+                "datatype": "light",
+                "sensor:": "NM1000",
+                "sensorID": 4
             }
         ]
 
