@@ -9,16 +9,28 @@
 #include <fstream>
 #include <cstdio> // For fopen, fclose
 
+#include "client/DataBuffer.hpp"
+#include <memory>
+#include <atomic>
+
+
+class DataBuffer;
+
 class JsonWriter {
 public: 
-    JsonWriter(); // constructor
+    JsonWriter(std::shared_ptr<DataBuffer> dataBuffer, const std::string& exportPath); // constructor
 
+    void start();
+    void stop();
 
     // returns boolean if has been written to 
     bool writeToJson(buffer_data_t data); 
 
     Document getDocumentFromData(buffer_data_t data);
+    
 private:
-    std::time_t previousTimestamp;
-
+    std::time_t previousTimestamp = 0;
+    std::atomic<bool> running_{true};
+    std::shared_ptr<DataBuffer> dataBuffer_;
+    std::string exportPath;
 };

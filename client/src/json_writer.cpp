@@ -8,7 +8,34 @@
 #include <cstdio> // For fopen, fclose
 using namespace rapidjson;
 
-JsonWriter::JsonWriter() {}
+JsonWriter::JsonWriter(std::shared_ptr<DataBuffer> dataBuffer, const std::string& exportPath) 
+    : dataBuffer_(dataBuffer), exportPath(exportPath) {}
+
+void JsonWriter::start() {
+    // This function will run in a separate thread and continuously check for new data in the DataBuffer.
+    while (running_) {
+
+        if(dataBuffer_->readAll().size() > 0) {
+            buffer_data_t latestData = dataBuffer_->readAll().back(); // Get the most recent data entry
+            int written = 0;
+
+            if (latestData.timestamp > previousTimestamp) { // Check if it's new data
+                written = writeToJson(latestData);
+                if(written){
+                    previousTimestamp = latestData.timestamp; // Update the last written timestamp
+                } else {
+                    std::cout << "Failed to write data to JSON for sensorID: " << latestData.sensorID << std::endl;
+                }
+            }
+
+        }
+
+    }
+}
+
+void JsonWriter::stop() {
+    running_ = false;
+}
 
 bool JsonWriter::writeToJson(buffer_data_t data) {
     Document doc = getDocumentFromData(data);
@@ -30,8 +57,6 @@ bool JsonWriter::writeToJson(buffer_data_t data) {
     doc.Accept(writer);
     
     fclose(fp);
-
-    previousTimestamp = data.timestamp;
     
     return true; // stub
 }
