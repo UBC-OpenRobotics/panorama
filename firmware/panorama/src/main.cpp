@@ -116,3 +116,9 @@ void loop() {
 
     client.print(sensorDataToJson(data));
 }
+
+/*
+- sensors we have do not supposed i2c, not sure if we can do any testing with i2c bus 
+- since ln355 is not an i2c device, has no i2c address, does not respond to i2c scan commands
+- if want to test need to have i2c sensor or an i2c adc to read analog snesor through adc over i2c
+*/
