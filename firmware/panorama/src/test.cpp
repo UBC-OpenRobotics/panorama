@@ -1,158 +1,116 @@
-// #include <WiFi.h>
+#include <Arduino.h>
+#include <WiFi.h>
+#include <WiFiClient.h>
+#include <WiFiServer.h>
 
+const char *SSID = "ESP32-Interface";
+const char *PASS = "12345678";
+const uint16_t PORT = 9000;
 
-// /*
-// Alex: suggestions
-// #include "esp_http_server.h"
-// #include "esp_timer.h"
-// #include "Arduino.h"
-// #include "lwip/sockets.h"       
-// #include <sys/param.h>
-// #include <stdlib.h>
-// #include <string.h>
+WiFiServer server(PORT);
+WiFiClient client;
 
-// String WiFiAddr;
+bool sendEnabled = false;
+unsigned long sampleIntervalMs = 1000;
+unsigned long lastSendMs = 0;
+unsigned long streamStartMs = 0;
 
+const uint16_t SENSOR_ID = 1;
+const char *SENSOR_NAME = "mock_sensor";
 
-// typedef struct {
-//   httpd_req_t *req;
-//   size_t len;
-// } export_data_t;
+void handleCommand(String cmd) {
+  cmd.trim();
+  cmd.toUpperCase();
 
+  if (cmd.startsWith("START")) {
+    int spaceIdx = cmd.indexOf(' ');
+    if (spaceIdx > 0) {
+      float freqHz = cmd.substring(spaceIdx + 1).toFloat();
+      if (freqHz > 0.0f) {
+        sampleIntervalMs = (unsigned long)(1000.0f / freqHz);
+      }
+    }
+    streamStartMs = millis();
+    sendEnabled = true;
+    Serial.printf("Streaming STARTED at %.2f Hz\n", 1000.0f / sampleIntervalMs);
+    if (client && client.connected()) {
+      client.print("{\"type\":\"ack\",\"cmd\":\"START\"}\n");
+    }
+    return;
+  }
 
-// */
+  if (cmd.startsWith("STOP")) {
+    sendEnabled = false;
+    Serial.println("Streaming STOPPED");
+    if (client && client.connected()) {
+      client.print("{\"type\":\"ack\",\"cmd\":\"STOP\"}\n");
+    }
+    return;
+  }
 
+  if (cmd == "PING") {
+    if (client && client.connected()) {
+      client.print("{\"type\":\"pong\"}\n");
+    }
+    return;
+  }
 
+  Serial.printf("Unknown cmd: %s\n", cmd.c_str());
+  if (client && client.connected()) {
+    client.print("{\"type\":\"error\",\"msg\":\"unknown_cmd\"}\n");
+  }
+}
 
-// // Wi-Fi Access Point credentials
-// const char* SSID = "ESP32-Interface";
-// const char* PASS = "12345678";
-// const uint16_t PORT = 9000;
+void setup() {
+  Serial.begin(115200);
 
-// WiFiServer server(PORT);
-// WiFiClient client;
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP(SSID, PASS);
+  IPAddress ip = WiFi.softAPIP();
+  Serial.printf("AP started: %s (%s)\n", SSID, ip.toString().c_str());
 
-// bool sendEnabled = false;
-// unsigned long sampleInterval = 1000; // ms
-// unsigned long lastSend = 0;
-// unsigned long startTime = 0;
+  server.begin();
+  server.setNoDelay(true);
+  Serial.printf("TCP server listening on port %u\n", (unsigned int)PORT);
+}
 
-// // uint32_t seq = 0;
-// const uint16_t SENSOR_ID = 1;
-// const char* SENSOR_NAME = "temperature";
+void loop() {
+  WiFiClient newClient = server.available();
+  if (newClient) {
+    if (client && client.connected()) {
+      client.stop();
+    }
+    client = newClient;
+    client.print("{\"type\":\"status\",\"msg\":\"connected\"}\n");
+    Serial.println("Client connected");
+  }
 
-// const uint16_t SENSOR_ID = 2;
-// const char* SENSOR_NAME = "ultrasonic";
+  if (client && client.connected() && client.available()) {
+    String cmd = client.readStringUntil('\n');
+    handleCommand(cmd);
+  }
 
-// void setup() {
-//   Serial.begin(115200);
+  if (!(sendEnabled && client && client.connected())) {
+    return;
+  }
 
-//   WiFi.mode(WIFI_AP);
-//   WiFi.softAP(SSID, PASS);
-//   IPAddress ip = WiFi.softAPIP();
-//   Serial.printf("AP started: %s (%s)\n", SSID, ip.toString().c_str());
+  unsigned long now = millis();
+  if (now - lastSendMs < sampleIntervalMs) {
+    return;
+  }
+  lastSendMs = now;
 
-//   server.begin();
-//   server.setNoDelay(true);
-// }
+  float mockValue = random(0, 1000) / 10.0f;
+  unsigned long timestampMs = now - streamStartMs;
 
-// void handleCommand(String cmd) {
-//   cmd.trim();
-//   cmd.toUpperCase();
+  String json = "{";
+  json += "\"sensor\":\"" + String(SENSOR_NAME) + "\",";
+  json += "\"sensor_id\":" + String(SENSOR_ID) + ",";
+  json += "\"timestamp_ms\":" + String(timestampMs) + ",";
+  json += "\"value\":" + String(mockValue, 2);
+  json += "}\n";
 
-//   if (cmd.startsWith("START")) {
-//     int spaceIdx = cmd.indexOf(' ');
-//     if (spaceIdx > 0) {
-//       float freq = cmd.substring(spaceIdx + 1).toFloat();
-//       if (freq > 0) sampleInterval = 1000.0 / freq;
-//     }
-//     startTime = millis();
-//     // seq = 0;              // reset sequence on start
-//     sendEnabled = true;
-//     Serial.printf("Signal ON, freq=%.1f Hz\n", 1000.0 / sampleInterval);
-
-//   } else if (cmd.startsWith("STOP")) {
-//     sendEnabled = false;
-//     Serial.println("Signal OFF");
-
-//   } else {
-//     Serial.printf("Unknown cmd: %s\n", cmd.c_str());
-//   }
-// }
-
-// /*
-// We can look into using URIs to distinguish between different types of cmds and host different types of data
-
-// static size_t encode_export_data_stream(void* arg, size_t index, const void* data, size_t len) {
-//   export_data_t *d = (export_data_t *) arg;
-//   if (!index) {
-//     d->len = 0; 
-//   }
-//   if (httpd_resp_send_chunk(d->req, (const char *)data, len) != ESP_OK){
-//     return 0;
-//   }
-//   d->len += len;
-//   return len;
-// }
-
-
-// static esp_err_t capture_handler(httpd_req_t *req) {
-//   esp_err_t res = ESP_OK;
-//   int64_t chunk_start_time = esp_timer_get_time();
-
-//   httpd_resp_set_type(req, "data/json");
-
-//   // get local buffer
-
-//   // if buffer size == the size we define
-//     // res = httpd_resp_send(..);
-//   // else 
-//   //  httpd_resp_send_chunk(..);
-
-//   return res // result from httpd_resp_send(...)
-// }
-
-
-// */
-
-
-// void loop() {
-//   // accept new client
-//   WiFiClient newClient = server.available();
-//   if (newClient) {
-//     if (client && client.connected()) client.stop();
-//     client = newClient;
-//     client.print("{\"type\":\"status\",\"msg\":\"connected\"}\n");
-//     Serial.println("Backend connected");
-//   }
-
-//   // read commands
-//   if (client && client.connected() && client.available()) {
-//     String cmd = client.readStringUntil('\n');
-//     handleCommand(cmd);
-//   }
-
-//   // send JSON data packets
-//   if (sendEnabled && client && client.connected()) {
-//     unsigned long now = millis();
-//     if (now - lastSend >= sampleInterval) {
-//       lastSend = now;
-
-//       float sensorVal = random(0, 1000) / 10.0;
-//       unsigned long timestamp = now - startTime;
-
-//       String json =
-//         "{"
-//           "\"sensor\":\"" + String(SENSOR_NAME) + "\","
-//           "\"sensor_id\":" + String(SENSOR_ID) + ","
-//           // "\"seq\":" + String(seq++) + ","
-//           "\"timestamp_ms\":" + String(timestamp) + ","
-//           "\"value\":" + String(sensorVal, 2) +
-//         "}\n";
-
-//       client.print(json);
-//       Serial.print("Sent: ");
-//       Serial.print(json);
-//     }
-//   }
-// }
+  client.print(json);
+  Serial.print("Sent: ");
+  Serial.print(json);
+}

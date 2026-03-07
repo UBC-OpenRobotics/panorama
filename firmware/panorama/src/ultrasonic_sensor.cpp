@@ -2,32 +2,83 @@
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <WiFiServer.h>
-#include <Wire.h>
+#include <WiFiUdp.h>
 
 // Wi-Fi Access Point credentials
 const char *SSID = "ESP32-Interface";
 const char *PASS = "12345678";
 const uint16_t PORT = 9000;
 
-WiFiServer server(PORT);
-WiFiClient client;
+WiFiServer tcpServer(PORT);
+WiFiClient tcpClient;
+WiFiUDP udp;
+
+enum TransportMode {
+    MODE_TCP,
+    MODE_UDP
+};
+
+TransportMode activeMode = MODE_TCP;
+
+IPAddress udpPeerIp;
+uint16_t udpPeerPort = 0;
+bool udpPeerKnown = false;
 
 // Stream control
 bool sendEnabled = false;
 unsigned long sampleIntervalMs = 1000;
 unsigned long lastSendMs = 0;
 
-// I2C bus configuration
-const int I2C_SDA_PIN = 21;
-const int I2C_SCL_PIN = 22;
-const uint32_t I2C_CLOCK_HZ = 100000;
+// GPIO ultrasonic configuration (adjust pins for your wiring)
+const uint8_t ULTRASONIC_TRIG_PIN = 5;
+const uint8_t ULTRASONIC_ECHO_PIN = 18;
+const unsigned long ECHO_TIMEOUT_US = 30000;
 
-const uint8_t SENSOR_READ_LEN = 2;
 const uint16_t SENSOR_ID = 2;
-const char *SENSOR_NAME = "ultrasonic_i2c";
+const char *SENSOR_NAME = "ultrasonic";
 
-uint8_t sensorAddresses[16];
-size_t sensorCount = 0;
+enum CommandSource {
+    SRC_TCP,
+    SRC_UDP
+};
+
+void sendToTcp(const String &line) {
+    if (tcpClient && tcpClient.connected()) {
+        tcpClient.print(line);
+    }
+}
+
+void sendToUdp(const String &line) {
+    if (!udpPeerKnown) {
+        return;
+    }
+    udp.beginPacket(udpPeerIp, udpPeerPort);
+    udp.print(line);
+    udp.endPacket();
+}
+
+void replyToSource(CommandSource src, const String &line) {
+    if (src == SRC_TCP) {
+        sendToTcp(line);
+    } else {
+        sendToUdp(line);
+    }
+}
+
+bool canStreamToActiveTarget() {
+    if (activeMode == MODE_TCP) {
+        return tcpClient && tcpClient.connected();
+    }
+    return udpPeerKnown;
+}
+
+void sendDataLine(const String &line) {
+    if (activeMode == MODE_TCP) {
+        sendToTcp(line);
+    } else {
+        sendToUdp(line);
+    }
+}
 
 void setupAccessPoint() {
     WiFi.mode(WIFI_AP);
@@ -36,48 +87,57 @@ void setupAccessPoint() {
     Serial.printf("AP started: %s (%s)\n", SSID, ip.toString().c_str());
 }
 
-void setupI2C() {
-    Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN, I2C_CLOCK_HZ);
-    Serial.printf("I2C started on SDA=%d SCL=%d @ %lu Hz\n", I2C_SDA_PIN, I2C_SCL_PIN, I2C_CLOCK_HZ);
+void setupUltrasonicGpio() {
+    pinMode(ULTRASONIC_TRIG_PIN, OUTPUT);
+    pinMode(ULTRASONIC_ECHO_PIN, INPUT);
+    digitalWrite(ULTRASONIC_TRIG_PIN, LOW);
+    Serial.printf("Ultrasonic GPIO configured TRIG=%u ECHO=%u\n",
+                  (unsigned int)ULTRASONIC_TRIG_PIN,
+                  (unsigned int)ULTRASONIC_ECHO_PIN);
 }
 
-void scanForI2CDevices() {
-    sensorCount = 0;
+bool readDistanceCmFromGpio(float &distanceCm) {
+    // Send 10us trigger pulse.
+    digitalWrite(ULTRASONIC_TRIG_PIN, LOW);
+    delayMicroseconds(2);
+    digitalWrite(ULTRASONIC_TRIG_PIN, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(ULTRASONIC_TRIG_PIN, LOW);
 
-    for (uint8_t address = 1; address < 127; address++) {
-        Wire.beginTransmission(address);
-        if (Wire.endTransmission() == 0) {
-            if (sensorCount < (sizeof(sensorAddresses) / sizeof(sensorAddresses[0]))) {
-                sensorAddresses[sensorCount++] = address;
-            }
-            Serial.printf("I2C device found at 0x%02X\n", address);
-        }
-    }
-
-    if (sensorCount == 0) {
-        Serial.println("No I2C devices found");
-    } else {
-        Serial.printf("Total I2C devices tracked: %u\n", (unsigned int)sensorCount);
-    }
-}
-
-bool readDistanceCmFromI2C(uint8_t address, float &distanceCm) {
-    int received = Wire.requestFrom((int)address, (int)SENSOR_READ_LEN);
-    if (received != SENSOR_READ_LEN) {
-        while (Wire.available()) {
-            (void)Wire.read();
-        }
+    unsigned long pulseWidthUs = pulseIn(ULTRASONIC_ECHO_PIN, HIGH, ECHO_TIMEOUT_US);
+    if (pulseWidthUs == 0) {
         return false;
     }
 
-    uint16_t raw = ((uint16_t)Wire.read() << 8) | Wire.read();
-    distanceCm = raw / 10.0f;
+    // Speed of sound: 0.0343 cm/us, divide by 2 for round trip.
+    distanceCm = (pulseWidthUs * 0.0343f) / 2.0f;
     return true;
 }
 
-void handleCommand(String cmd) {
+void setMode(TransportMode mode, CommandSource src) {
+    activeMode = mode;
+    String ack = "{\"type\":\"ack\",\"cmd\":\"MODE\",\"mode\":\"";
+    ack += (mode == MODE_TCP) ? "TCP" : "UDP";
+    ack += "\"}\n";
+    replyToSource(src, ack);
+}
+
+void handleCommand(String cmd, CommandSource src) {
     cmd.trim();
     cmd.toUpperCase();
+
+    if (cmd.startsWith("MODE ")) {
+        String mode = cmd.substring(5);
+        mode.trim();
+        if (mode == "TCP") {
+            setMode(MODE_TCP, src);
+        } else if (mode == "UDP") {
+            setMode(MODE_UDP, src);
+        } else {
+            replyToSource(src, "{\"type\":\"error\",\"msg\":\"mode_must_be_tcp_or_udp\"}\n");
+        }
+        return;
+    }
 
     if (cmd.startsWith("START")) {
         int spaceIdx = cmd.indexOf(' ');
@@ -88,51 +148,93 @@ void handleCommand(String cmd) {
             }
         }
         sendEnabled = true;
-        Serial.printf("I2C streaming STARTED at %.2f Hz\n", 1000.0f / sampleIntervalMs);
+        Serial.printf("Streaming STARTED at %.2f Hz via %s\n",
+                      1000.0f / sampleIntervalMs,
+                      activeMode == MODE_TCP ? "TCP" : "UDP");
+        replyToSource(src, "{\"type\":\"ack\",\"cmd\":\"START\"}\n");
         return;
     }
 
-    if (cmd.startsWith("STOP")) {
+    if (cmd == "STOP") {
         sendEnabled = false;
-        Serial.println("I2C streaming STOPPED");
+        Serial.println("Streaming STOPPED");
+        replyToSource(src, "{\"type\":\"ack\",\"cmd\":\"STOP\"}\n");
+        return;
+    }
+
+    if (cmd == "END") {
+        sendEnabled = false;
+        Serial.println("Session ENDED by client");
+        replyToSource(src, "{\"type\":\"ack\",\"cmd\":\"END\"}\n");
+        if (src == SRC_TCP && tcpClient && tcpClient.connected()) {
+            tcpClient.stop();
+        }
+        if (src == SRC_UDP) {
+            udpPeerKnown = false;
+        }
         return;
     }
 
     if (cmd == "RESCAN") {
-        scanForI2CDevices();
+        replyToSource(src, "{\"type\":\"ack\",\"cmd\":\"RESCAN\",\"msg\":\"gpio_mode_no_scan\"}\n");
         return;
     }
 
-    Serial.printf("Unknown cmd: %s\n", cmd.c_str());
+    replyToSource(src, "{\"type\":\"error\",\"msg\":\"unknown_cmd\"}\n");
 }
 
 void setup() {
     Serial.begin(115200);
     setupAccessPoint();
-    server.begin();
-    server.setNoDelay(true);
 
-    setupI2C();
-    scanForI2CDevices();
+    tcpServer.begin();
+    tcpServer.setNoDelay(true);
+    udp.begin(PORT);
+    Serial.printf("TCP server + UDP listener started on port %u\n", (unsigned int)PORT);
+
+    setupUltrasonicGpio();
 }
 
-void loop() {
-    WiFiClient newClient = server.available();
+void handleTcp() {
+    WiFiClient newClient = tcpServer.available();
     if (newClient) {
-        if (client && client.connected()) {
-            client.stop();
+        if (tcpClient && tcpClient.connected()) {
+            tcpClient.stop();
         }
-        client = newClient;
-        client.print("{\"type\":\"status\",\"msg\":\"connected\"}\n");
-        Serial.println("Backend connected");
+        tcpClient = newClient;
+        sendToTcp("{\"type\":\"status\",\"msg\":\"connected\",\"transport\":\"TCP\"}\n");
+        Serial.println("TCP client connected");
     }
 
-    if (client && client.connected() && client.available()) {
-        String cmd = client.readStringUntil('\n');
-        handleCommand(cmd);
+    if (tcpClient && tcpClient.connected() && tcpClient.available()) {
+        String cmd = tcpClient.readStringUntil('\\n');
+        handleCommand(cmd, SRC_TCP);
+    }
+}
+
+void handleUdp() {
+    int packetSize = udp.parsePacket();
+    if (packetSize <= 0) {
+        return;
     }
 
-    if (!(sendEnabled && client && client.connected())) {
+    char buffer[256];
+    int len = udp.read(buffer, sizeof(buffer) - 1);
+    if (len < 0) {
+        return;
+    }
+    buffer[len] = '\\0';
+
+    udpPeerIp = udp.remoteIP();
+    udpPeerPort = udp.remotePort();
+    udpPeerKnown = true;
+
+    String cmd = String(buffer);
+    handleCommand(cmd, SRC_UDP);
+}
+
+void maybeStreamData() {
+    if (!(sendEnabled && canStreamToActiveTarget())) {
         return;
     }
 
@@ -142,27 +244,25 @@ void loop() {
     }
     lastSendMs = now;
 
-    if (sensorCount == 0) {
-        client.print("{\"type\":\"warning\",\"msg\":\"no_i2c_sensors\"}\n");
-        return;
+    float distanceCm = 0.0f;
+    bool ok = readDistanceCmFromGpio(distanceCm);
+
+    String json = "{";
+    json += "\"sensor\":\"" + String(SENSOR_NAME) + "\",";
+    json += "\"sensor_id\":" + String(SENSOR_ID) + ",";
+    json += "\"transport\":\"" + String(activeMode == MODE_TCP ? "TCP" : "UDP") + "\",";
+    json += "\"timestamp_ms\":" + String(now) + ",";
+    json += "\"ok\":" + String(ok ? "true" : "false");
+    if (ok) {
+        json += ",\"value_cm\":" + String(distanceCm, 2);
     }
+    json += "}\n";
 
-    for (size_t i = 0; i < sensorCount; i++) {
-        uint8_t address = sensorAddresses[i];
-        float distanceCm = 0.0f;
-        bool ok = readDistanceCmFromI2C(address, distanceCm);
+    sendDataLine(json);
+}
 
-        String json = "{";
-        json += "\"sensor\":\"" + String(SENSOR_NAME) + "\",";
-        json += "\"sensor_id\":" + String(SENSOR_ID) + ",";
-        json += "\"i2c_addr\":\"0x" + String(address, HEX) + "\",";
-        json += "\"timestamp_ms\":" + String(now) + ",";
-        json += "\"ok\":" + String(ok ? "true" : "false");
-        if (ok) {
-            json += ",\"value_cm\":" + String(distanceCm, 2);
-        }
-        json += "}\n";
-
-        client.print(json);
-    }
+void loop() {
+    handleTcp();
+    handleUdp();
+    maybeStreamData();
 }
