@@ -15,9 +15,10 @@ public:
 
 
     // returns boolean if has been written to 
-    bool writeToJson(int sensorID, buffer_data_t data); 
+    bool writeToJson(buffer_data_t data); 
 
-//private:
-
+    Document getDocumentFromData(buffer_data_t data);
+private:
+    std::time_t previousTimestamp;
 
 };

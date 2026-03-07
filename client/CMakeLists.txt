@@ -7,6 +7,7 @@ set(CLIENT_SOURCES
     src/message_model.cpp
     src/tcp_client.cpp
     src/json_reader.cpp
+    src/json_writer.cpp
     src/DataBuffer.cpp
     src/graph_panel.cpp
     src/sensor_manager.cpp
@@ -27,6 +28,7 @@ set(CLIENT_HEADERS
     include/client/message_model.hpp
     include/client/tcp_client.hpp
     include/client/json_reader.hpp
+    include/client/json_writer.hpp
     include/client/buffer_base.hpp
     include/client/DataBuffer.hpp
     include/client/sensor_manager.hpp
