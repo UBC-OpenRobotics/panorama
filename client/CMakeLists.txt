@@ -1,44 +1,11 @@
 cmake_minimum_required(VERSION 3.20)
 
-set(CLIENT_SOURCES
-    src/main.cpp
-    src/mainframe.cpp
-    src/argparser.cpp
-    src/sensor.cpp
-    src/message_model.cpp
-    src/tcp_client.cpp
-    src/json_reader.cpp
-    src/DataBuffer.cpp
-    src/graph_panel.cpp
-    src/sensor_manager.cpp
-    src/sensor_data_panel.cpp
-    src/config_manager.cpp
-    src/data_logger.cpp
-    src/settings_dialog.cpp
-)
+# ===== AUTO detects .hpp, .cpp. NO NEED TO ADD THEM MANUALLY! =====
+file(GLOB CLIENT_SOURCES CONFIGURE_DEPENDS src/*.cpp)
+file(GLOB COMMON_HEADERS CONFIGURE_DEPENDS include/common/*.hpp include/common/*.h)
+file(GLOB CLIENT_HEADERS CONFIGURE_DEPENDS include/client/*.hpp include/client/*.h)
 
-set(COMMON_HEADERS
-    include/common/panorama_defines.hpp
-    include/common/panorama_utils.hpp
-)
-
-set(CLIENT_HEADERS
-    include/client/mainframe.hpp
-    include/client/argparser.hpp
-    include/client/message_model.hpp
-    include/client/tcp_client.hpp
-    include/client/json_reader.hpp
-    include/client/buffer_base.hpp
-    include/client/DataBuffer.hpp
-    include/client/sensor.hpp
-    include/client/sensor_manager.hpp
-    include/client/sensor_data_panel.h
-    include/client/graph_panel.hpp
-    include/client/config_manager.hpp
-    include/client/data_logger.hpp
-    include/client/settings_dialog.hpp
-)
-
+set(WXMATHPLOT_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(external/wxMathPlot_0.2.0/mathplot)
 
 # Executable settings
