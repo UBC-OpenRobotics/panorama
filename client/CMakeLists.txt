@@ -9,9 +9,7 @@ set(WXMATHPLOT_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(external/wxMathPlot_0.2.0/mathplot)
 
 # Executable settings
-if(WIN32)
-    add_executable(panorama-client WIN32 ${CLIENT_SOURCES} ${COMMON_HEADERS} ${CLIENT_HEADERS})
-elseif(APPLE)
+if(APPLE)
     add_executable(panorama-client MACOSX_BUNDLE ${CLIENT_SOURCES} ${COMMON_HEADERS} ${CLIENT_HEADERS})
 else()
     add_executable(panorama-client ${CLIENT_SOURCES} ${COMMON_HEADERS} ${CLIENT_HEADERS})
@@ -22,15 +20,9 @@ target_include_directories(panorama-client
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-if(WIN32)
-    target_link_libraries(panorama-client PRIVATE ws2_32)
-endif()
-
 
 # wxWidgets Configuration
-if(WIN32)
-    set(WXWIDGETS_PREBUILT_PATH "$ENV{WXWIN}")
-elseif(APPLE)
+if(APPLE)
     set(WXWIDGETS_PREBUILT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/wxwidgets-prebuilt/macos-arm64")
 else()
     set(WXWIDGETS_PREBUILT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/wxwidgets-prebuilt/linux-x64")
@@ -40,77 +32,7 @@ set(wxWidgets_ROOT_DIR "${WXWIDGETS_PREBUILT_PATH}")
 set(wxWidgets_LIB_DIR "${WXWIDGETS_PREBUILT_PATH}/lib")
 set(wxWidgets_INCLUDE_DIR "${WXWIDGETS_PREBUILT_PATH}/include")
 
-if(WIN32)
-    # Detect if using MinGW or MSVC
-    if(MINGW)
-        message(STATUS "Configuring for MinGW build")
-        
-        target_include_directories(panorama-client PRIVATE 
-            "${wxWidgets_INCLUDE_DIR}"
-            "${WXWIDGETS_PREBUILT_PATH}/lib/wx/include/x86_64-w64-mingw32-msw-unicode-static-3.3"
-        )
-        
-        target_link_libraries(panorama-client PRIVATE
-            "${wxWidgets_LIB_DIR}/libwx_mswu-3.3-x86_64-w64-mingw32.a"
-            "${wxWidgets_LIB_DIR}/libwxregexu-3.3-x86_64-w64-mingw32.a"
-            "${wxWidgets_LIB_DIR}/libwxexpat-3.3-x86_64-w64-mingw32.a"
-            "${wxWidgets_LIB_DIR}/libwxtiff-3.3-x86_64-w64-mingw32.a"
-            "${wxWidgets_LIB_DIR}/libwxjpeg-3.3-x86_64-w64-mingw32.a"
-            "${wxWidgets_LIB_DIR}/libwxpng-3.3-x86_64-w64-mingw32.a"
-            "${wxWidgets_LIB_DIR}/libwxzlib-3.3-x86_64-w64-mingw32.a"
-            # Windows system libraries
-            -lkernel32 -luser32 -lgdi32 -lcomdlg32 -lwinspool -lwinmm -lshell32 
-            -lshlwapi -lcomctl32 -lole32 -loleaut32 -luuid -lrpcrt4 -ladvapi32 
-            -lversion -lws2_32 -lwininet -loleacc -luxtheme
-        )
-        
-        target_compile_definitions(panorama-client PRIVATE
-            __WXMSW__
-            WXUSINGDLL=0
-            _UNICODE
-            UNICODE
-        )
-        
-    elseif(MSVC)
-        message(STATUS "Configuring for MSVC build")
-        
-        target_include_directories(panorama-client PRIVATE 
-            "${wxWidgets_INCLUDE_DIR}"
-            "${wxWidgets_LIB_DIR}/vc_x64_lib/mswu"
-        )
-        
-        # Find all wxWidgets libraries in the lib directory
-        file(GLOB WX_LIBS "${wxWidgets_LIB_DIR}/vc_x64_lib/wx*.lib")
-        
-        if(NOT WX_LIBS)
-            message(FATAL_ERROR "No wxWidgets libraries found in ${wxWidgets_LIB_DIR}")
-        endif()
-        
-        message(STATUS "Found wxWidgets libraries:")
-        foreach(lib ${WX_LIBS})
-            get_filename_component(lib_name ${lib} NAME)
-            message(STATUS "  ${lib_name}")
-        endforeach()
-        
-        target_link_libraries(panorama-client PRIVATE
-            ${WX_LIBS}
-            # Windows system libraries
-            kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib 
-            shell32.lib shlwapi.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib 
-            rpcrt4.lib advapi32.lib version.lib ws2_32.lib wininet.lib oleacc.lib 
-            uxtheme.lib gdiplus.lib
-        )
-        
-        target_compile_definitions(panorama-client PRIVATE
-            __WXMSW__
-            _UNICODE
-            UNICODE
-        )
-    endif()
-
-    message(STATUS "Using wxWidgets prebuilt from ${WXWIDGETS_PREBUILT_PATH}")
-    
-elseif(APPLE)
+if(APPLE)
     # macOS: Use system-installed wxWidgets from /usr/local
     find_program(wxWidgets_CONFIG_EXECUTABLE wx-config
         HINTS /usr/local/bin
@@ -183,11 +105,7 @@ else() # linux
     message(STATUS "Using locally built wxWidgets via wx-config: ${wxWidgets_CONFIG_EXECUTABLE}")
 endif()
 
-if(MSVC)
-    target_compile_options(panorama-client PRIVATE /W4)
-else()
-    target_compile_options(panorama-client PRIVATE -Wall -Wextra -Wpedantic)
-endif()
+target_compile_options(panorama-client PRIVATE -Wall -Wextra -Wpedantic)
 
 
 install(TARGETS panorama-client
