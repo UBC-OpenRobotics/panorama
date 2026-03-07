@@ -42,10 +42,6 @@ buffer_data_t JsonReader::exportToBuffer(std::string json) {
     
     rapidjson::Document doc;
     rapidjson::ParseResult ok = doc.Parse(json.c_str());
-    // if (doc.IsArray()) {
-    //     std::cout << "dwda";
-    // }
-    //std::cout << json << std::endl;
     if (!ok) {
         std::cerr << "JSON parse error at offset " << ok.Offset()
                   << ": " << rapidjson::GetParseError_En(ok.Code()) << std::endl;
@@ -71,7 +67,7 @@ buffer_data_t JsonReader::exportToBuffer(std::string json) {
     ret.datatype = sensorTypeString.c_str();
     ret.data = sensorValue;
     ret.dataunit = sensorUnitString.c_str();
-    ret.timestamp = std::time(&ret.timestamp);
+    ret.timestamp = std::time(nullptr);
 
     return ret;
 

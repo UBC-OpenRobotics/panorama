@@ -1,4 +1,7 @@
 [
-{"datatype": "light", "data": 0.200000, "dataunit": "nm", "timestamp": 1770504589},
-{"datatype": "temperature", "data": 29.500000, "dataunit": "celsius", "timestamp": 1770504589}
+{"datatype": "temperature", "data": 29.500000, "dataunit": "celsius", "timestamp": 1772921407},
+{"datatype": "humidity", "data": 62.900002, "dataunit": "percent", "timestamp": 1772921408},
+{"datatype": "pressure", "data": 1013.250000, "dataunit": "hPa", "timestamp": 1772921408},
+{"datatype": "light", "data": 0.200000, "dataunit": "nm", "timestamp": 1772921408},
+{"datatype": "temperature", "data": 26.500000, "dataunit": "celsius", "timestamp": 1772921409}
 ]
