@@ -1,6 +1,6 @@
 # Panorama
 
-A telemetry visualization client for robotics sensor data, developed by [UBC Open Robotics](https://ubcopenrobotics.ca). Panorama receives a live JSON stream from an ESP32 (or a mock Python server), and displays it in a GUI with real-time graphs and data logging.
+A telemetry visualization client for robotics sensor data, developed by [UBC Open Robotics](https://openrobotics.ca). Panorama receives a live JSON stream from an ESP32 (or a mock Python server), and displays it in a GUI with real-time graphs and data logging.
 
 ## Table of Contents
 
