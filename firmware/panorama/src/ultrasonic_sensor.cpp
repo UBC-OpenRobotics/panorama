@@ -20,9 +20,14 @@ enum TransportMode {
 
 TransportMode activeMode = MODE_TCP;
 
-IPAddress udpPeerIp;
-uint16_t udpPeerPort = 0;
-bool udpPeerKnown = false;
+struct UdpSubscriber {
+    IPAddress ip;
+    uint16_t port;
+    bool active;
+};
+
+const int MAX_UDP_SUBSCRIBERS = 5;
+UdpSubscriber subscribers[MAX_UDP_SUBSCRIBERS];
 
 // Stream control
 bool sendEnabled = false;
@@ -48,20 +53,76 @@ void sendToTcp(const String &line) {
     }
 }
 
-void sendToUdp(const String &line) {
-    if (!udpPeerKnown) {
-        return;
-    }
-    udp.beginPacket(udpPeerIp, udpPeerPort);
+void sendToUdpPeer(IPAddress ip, uint16_t port, const String &line) {
+    udp.beginPacket(ip, port);
     udp.print(line);
     udp.endPacket();
 }
 
-void replyToSource(CommandSource src, const String &line) {
+void sendToAllUdpSubscribers(const String &line) {
+    for (int i = 0; i < MAX_UDP_SUBSCRIBERS; i++) {
+        if (!subscribers[i].active) {
+            continue;
+        }
+        sendToUdpPeer(subscribers[i].ip, subscribers[i].port, line);
+    }
+}
+
+bool hasUdpSubscribers() {
+    for (int i = 0; i < MAX_UDP_SUBSCRIBERS; i++) {
+        if (subscribers[i].active) {
+            return true;
+        }
+    }
+    return false;
+}
+
+int findUdpSubscriber(IPAddress ip, uint16_t port) {
+    for (int i = 0; i < MAX_UDP_SUBSCRIBERS; i++) {
+        if (subscribers[i].active &&
+            subscribers[i].ip == ip &&
+            subscribers[i].port == port) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+bool addUdpSubscriber(IPAddress ip, uint16_t port) {
+    if (findUdpSubscriber(ip, port) >= 0) {
+        return true;
+    }
+
+    for (int i = 0; i < MAX_UDP_SUBSCRIBERS; i++) {
+        if (!subscribers[i].active) {
+            subscribers[i].ip = ip;
+            subscribers[i].port = port;
+            subscribers[i].active = true;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void removeUdpSubscriber(IPAddress ip, uint16_t port) {
+    int index = findUdpSubscriber(ip, port);
+    if (index < 0) {
+        return;
+    }
+
+    subscribers[index].active = false;
+    subscribers[index].port = 0;
+}
+
+void replyToSource(CommandSource src,
+                   const String &line,
+                   IPAddress remoteIp = IPAddress(),
+                   uint16_t remotePort = 0) {
     if (src == SRC_TCP) {
         sendToTcp(line);
     } else {
-        sendToUdp(line);
+        sendToUdpPeer(remoteIp, remotePort, line);
     }
 }
 
@@ -69,14 +130,14 @@ bool canStreamToActiveTarget() {
     if (activeMode == MODE_TCP) {
         return tcpClient && tcpClient.connected();
     }
-    return udpPeerKnown;
+    return hasUdpSubscribers();
 }
 
 void sendDataLine(const String &line) {
     if (activeMode == MODE_TCP) {
         sendToTcp(line);
     } else {
-        sendToUdp(line);
+        sendToAllUdpSubscribers(line);
     }
 }
 
@@ -114,15 +175,18 @@ bool readDistanceCmFromGpio(float &distanceCm) {
     return true;
 }
 
-void setMode(TransportMode mode, CommandSource src) {
+void setMode(TransportMode mode,
+             CommandSource src,
+             IPAddress remoteIp = IPAddress(),
+             uint16_t remotePort = 0) {
     activeMode = mode;
     String ack = "{\"type\":\"ack\",\"cmd\":\"MODE\",\"mode\":\"";
     ack += (mode == MODE_TCP) ? "TCP" : "UDP";
     ack += "\"}\n";
-    replyToSource(src, ack);
+    replyToSource(src, ack, remoteIp, remotePort);
 }
 
-void handleCommand(String cmd, CommandSource src) {
+void handleCommand(String cmd, CommandSource src, IPAddress remoteIp = IPAddress(), uint16_t remotePort = 0) {
     cmd.trim();
     cmd.toUpperCase();
 
@@ -130,11 +194,11 @@ void handleCommand(String cmd, CommandSource src) {
         String mode = cmd.substring(5);
         mode.trim();
         if (mode == "TCP") {
-            setMode(MODE_TCP, src);
+            setMode(MODE_TCP, src, remoteIp, remotePort);
         } else if (mode == "UDP") {
-            setMode(MODE_UDP, src);
+            setMode(MODE_UDP, src, remoteIp, remotePort);
         } else {
-            replyToSource(src, "{\"type\":\"error\",\"msg\":\"mode_must_be_tcp_or_udp\"}\n");
+            replyToSource(src, "{\"type\":\"error\",\"msg\":\"mode_must_be_tcp_or_udp\"}\n", remoteIp, remotePort);
         }
         return;
     }
@@ -147,40 +211,51 @@ void handleCommand(String cmd, CommandSource src) {
                 sampleIntervalMs = (unsigned long)(1000.0f / freqHz);
             }
         }
+        if (src == SRC_UDP && !addUdpSubscriber(remoteIp, remotePort)) {
+            replyToSource(src, "{\"type\":\"error\",\"msg\":\"udp_subscriber_limit_reached\"}\n", remoteIp, remotePort);
+            return;
+        }
         sendEnabled = true;
         Serial.printf("Streaming STARTED at %.2f Hz via %s\n",
                       1000.0f / sampleIntervalMs,
                       activeMode == MODE_TCP ? "TCP" : "UDP");
-        replyToSource(src, "{\"type\":\"ack\",\"cmd\":\"START\"}\n");
+        replyToSource(src, "{\"type\":\"ack\",\"cmd\":\"START\"}\n", remoteIp, remotePort);
         return;
     }
 
     if (cmd == "STOP") {
-        sendEnabled = false;
+        if (src == SRC_UDP) {
+            removeUdpSubscriber(remoteIp, remotePort);
+            sendEnabled = hasUdpSubscribers();
+        } else {
+            sendEnabled = false;
+        }
         Serial.println("Streaming STOPPED");
-        replyToSource(src, "{\"type\":\"ack\",\"cmd\":\"STOP\"}\n");
+        replyToSource(src, "{\"type\":\"ack\",\"cmd\":\"STOP\"}\n", remoteIp, remotePort);
         return;
     }
 
     if (cmd == "END") {
-        sendEnabled = false;
+        if (src == SRC_UDP) {
+            removeUdpSubscriber(remoteIp, remotePort);
+            sendEnabled = hasUdpSubscribers();
+        } else {
+            sendEnabled = false;
+        }
         Serial.println("Session ENDED by client");
-        replyToSource(src, "{\"type\":\"ack\",\"cmd\":\"END\"}\n");
+        replyToSource(src, "{\"type\":\"ack\",\"cmd\":\"END\"}\n", remoteIp, remotePort);
         if (src == SRC_TCP && tcpClient && tcpClient.connected()) {
             tcpClient.stop();
-        }
-        if (src == SRC_UDP) {
-            udpPeerKnown = false;
         }
         return;
     }
 
     if (cmd == "RESCAN") {
-        replyToSource(src, "{\"type\":\"ack\",\"cmd\":\"RESCAN\",\"msg\":\"gpio_mode_no_scan\"}\n");
+        replyToSource(src, "{\"type\":\"ack\",\"cmd\":\"RESCAN\",\"msg\":\"gpio_mode_no_scan\"}\n", remoteIp, remotePort);
         return;
     }
 
-    replyToSource(src, "{\"type\":\"error\",\"msg\":\"unknown_cmd\"}\n");
+    replyToSource(src, "{\"type\":\"error\",\"msg\":\"unknown_cmd\"}\n", remoteIp, remotePort);
 }
 
 void setup() {
@@ -225,12 +300,8 @@ void handleUdp() {
     }
     buffer[len] = '\0';
 
-    udpPeerIp = udp.remoteIP();
-    udpPeerPort = udp.remotePort();
-    udpPeerKnown = true;
-
     String cmd = String(buffer);
-    handleCommand(cmd, SRC_UDP);
+    handleCommand(cmd, SRC_UDP, udp.remoteIP(), udp.remotePort());
 }
 
 void maybeStreamData() {
@@ -252,7 +323,6 @@ void maybeStreamData() {
     json += "\"sensor_id\":" + String(SENSOR_ID) + ",";
     json += "\"transport\":\"" + String(activeMode == MODE_TCP ? "TCP" : "UDP") + "\",";
     json += "\"timestamp_ms\":" + String(now) + ",";
-    json += "\"ok\":" + String(ok ? "true" : "false");
     if (ok) {
         json += ",\"value_cm\":" + String(distanceCm, 2);
     }

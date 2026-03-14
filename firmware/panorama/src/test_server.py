@@ -74,7 +74,7 @@ def run_udp():
                     payload, addr = sock.recvfrom(BUFFER_SIZE)
                 except socket.timeout:
                     continue
-                print(f"Packet from {addr}")
+                # print(f"Packet from {addr}")
                 print_json_lines(payload)
         finally:
             sock.sendto(b"STOP\n", (ESP_IP, PORT))
