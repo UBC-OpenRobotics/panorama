@@ -45,5 +45,9 @@ node_modules/
 __pycache__/
 *.pyc
 
+
+# Firmware related:
+firmware/panorama/.cache/
+
 # Runtime directory
 rundir/
