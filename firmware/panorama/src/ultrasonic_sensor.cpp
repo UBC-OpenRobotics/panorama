@@ -207,7 +207,7 @@ void handleTcp() {
     }
 
     if (tcpClient && tcpClient.connected() && tcpClient.available()) {
-        String cmd = tcpClient.readStringUntil('\\n');
+        String cmd = tcpClient.readStringUntil('\n');
         handleCommand(cmd, SRC_TCP);
     }
 }
@@ -223,7 +223,7 @@ void handleUdp() {
     if (len < 0) {
         return;
     }
-    buffer[len] = '\\0';
+    buffer[len] = '\0';
 
     udpPeerIp = udp.remoteIP();
     udpPeerPort = udp.remotePort();
