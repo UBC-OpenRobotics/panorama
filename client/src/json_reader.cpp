@@ -7,6 +7,7 @@
 #include <vector>
 #include <string>
 #include <ctime>
+#include "common/panorama_utils.hpp"
 
 JsonReader::JsonReader() {}
 
@@ -42,6 +43,7 @@ buffer_data_t JsonReader::exportToBuffer(std::string json) {
     
     rapidjson::Document doc;
     rapidjson::ParseResult ok = doc.Parse(json.c_str());
+    std::cout << json.c_str() << std::endl;
     if (!ok) {
         std::cerr << "JSON parse error at offset " << ok.Offset()
                   << ": " << rapidjson::GetParseError_En(ok.Code()) << std::endl;
@@ -86,10 +88,7 @@ buffer_data_t JsonReader::exportToBuffer(std::string json) {
         ret.datatype = sensorUnitString.c_str();
     }
     if (doc.HasMember("timestamp")) {
-        std::time_t sensorUnitString (
-            doc["timestamp"].GetFloat()
-        );
-        ret.timestamp = sensorUnitString;
+        ret.timestamp = (long) doc["timestamp"].GetInt();
     }
 
     

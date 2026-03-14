@@ -122,7 +122,7 @@ if __name__ == "__main__":
 
     streamer = PStreamer() # Stream builder class
     # Building JSON stream using the PStreamJSON class
-    streamer.build_stream(PStreamJSON()).set_interval(1.0)
+    streamer.build_stream(PStreamJSON()).set_interval(0.054)
 
     streamer.start()
 

@@ -14,8 +14,8 @@ JsonWriter::JsonWriter(std::shared_ptr<DataBuffer> dataBuffer, const std::string
 void JsonWriter::start() {
     // This function will run in a separate thread and continuously check for new data in the DataBuffer.
     while (running_) {
-        //sleep for 10 milliseconds to avoid busy waiting
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        //sleep for 5 milliseconds to avoid busy waiting
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
         if(dataBuffer_->readAll().size() > 0) {
             buffer_data_t latestData = dataBuffer_->readAll().back(); // Get the most recent data entry
@@ -45,7 +45,7 @@ bool JsonWriter::writeToJson(buffer_data_t data) {
     // open/create document in rundir with name of sensorID
     std::string path = exportPath + "/" + std::to_string(data.sensorID);
 
-    FILE* fp = fopen(path.c_str(), "wb");
+    FILE* fp = fopen(path.c_str(), "ab");
     if (!fp) { 
         // file couldnt open - return false
         return false;
@@ -54,11 +54,10 @@ bool JsonWriter::writeToJson(buffer_data_t data) {
     char writeBuffer[65536];
     FileWriteStream os(fp, writeBuffer, sizeof(writeBuffer));
 
-    //PrettyWriter<FileWriteStream> writer(os); // write with indentation
-
     Writer<FileWriteStream> writer(os); // write without indentation but more compact
 
     doc.Accept(writer);
+    fputc('\n', fp);
     
     fclose(fp);
     

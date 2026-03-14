@@ -51,7 +51,7 @@ class PStreamJSON(PStreamBase):
         json_obj = self.sample_data[data_index].copy()
 
         # Add timestamp and sequence number
-        json_obj["timestamp"] = time.time()
+        json_obj["timestamp"] = int(time.time())
         json_obj["sequence"] = self.counter
 
         # Add variation to the values
