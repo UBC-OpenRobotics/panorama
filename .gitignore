@@ -44,3 +44,7 @@ desktop.ini
 node_modules/
 __pycache__/
 *.pyc
+
+
+# Firmware related:
+firmware/panorama/.cache/
