@@ -20,3 +20,4 @@ bool ArgParser::isTestMode() const {
 bool ArgParser::isNoGuiMode() const {
     return noGuiMode_;
 }
+
