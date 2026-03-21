@@ -75,6 +75,9 @@ fi
 
 # Build command with flags
 CMD="$BIN"
+if [[ "$NOESP" == true ]]; then
+    CMD="$CMD --noesp"
+fi
 if [[ "$NOGUI" == true ]]; then
     CMD="$CMD --nogui"
 fi
