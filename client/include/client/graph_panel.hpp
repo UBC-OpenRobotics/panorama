@@ -22,5 +22,12 @@ private:
 
     std::set<std::string> visibleSensors_;
 
+    void OnPaint(wxPaintEvent& event);
+    void OnSize(wxSizeEvent& event);
+    void DrawBackground(wxDC& dc);
+    void DrawGrid(wxDC& dc);
+    void DrawAxes(wxDC& dc);
     void UpdateGraph();
+
+    wxDECLARE_EVENT_TABLE();
 };
