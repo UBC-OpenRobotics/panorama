@@ -43,6 +43,8 @@ public:
     // Removes extracted portion from buffer
     std::string extractNextJson();
 
+    buffer_data_t consumeFront();
+
 
     // ---------------------------
     //        JSON PARSING

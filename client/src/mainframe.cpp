@@ -138,7 +138,7 @@ void MainFrame::updateDataPanel() {
 
 
     if (dataBuffer_->size() > 0) {
-        for (buffer_data_t latestData : dataBuffer_->readAll()) {
+        for (buffer_data_t latestData : dataBuffer_->consume()) {
 
             // Skip entries with no data-type (first sensor reading)
             if (latestData.datatype.empty()) continue;
