@@ -142,10 +142,7 @@ public:
         int tcpPort;
         bool autoReconnect;
         int reconnectDelay;
-        if (parser.isNoEspMode()) {
-            tcpHost = "127.0.0.1";
-            tcpPort = 3000;
-        } else if (!config.getTcpSettings(tcpHost, tcpPort, autoReconnect, reconnectDelay)) {
+        if (!config.getTcpSettings(tcpHost, tcpPort, autoReconnect, reconnectDelay)) {
             tcpHost = "127.0.0.1";
             tcpPort = 3000;
         }

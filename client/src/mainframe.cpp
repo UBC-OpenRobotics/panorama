@@ -7,10 +7,8 @@
 #include "client/sensor.hpp"
 #include "client/settings_dialog.hpp"
 #include "common/panorama_utils.hpp"
-#include "common/panorama_colours.hpp"
 #include "client/tcp_client.hpp"
 #include "client/config_manager.hpp"
-#include "client/esp32_scanner.hpp"
 #include <wx/dcbuffer.h>
 #include <wx/sizer.h>
 #include <functional>
@@ -18,7 +16,9 @@
 MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
     std::shared_ptr<DataBuffer> dataBuffer, std::shared_ptr<PostProcessing> postProcessor,
     TcpClient* tcpClient,
+    TcpClient* tcpClient,
     const wxPoint& pos, const wxSize& size)
+    : wxFrame(nullptr, wxID_ANY, title, pos, size), model_(model), dataBuffer_(dataBuffer), postProcessor_(postProcessor), tcpClient_(tcpClient) {
     : wxFrame(nullptr, wxID_ANY, title, pos, size), model_(model), dataBuffer_(dataBuffer), postProcessor_(postProcessor), tcpClient_(tcpClient) {
 
     CreateMenuBar();
@@ -334,15 +334,10 @@ void MainFrame::OnSettingsOpen(wxCommandEvent& event) {
     }
 }
 
-void MainFrame::OnStartStream(wxCommandEvent& event) {
-    if (tcpClient_) {
-        tcpClient_->sendCommand("START");
-    }
-}
-
-void MainFrame::OnStopStream(wxCommandEvent& event) {
-    if (tcpClient_) {
-        tcpClient_->sendCommand("STOP");
+void MainFrame::OnUpdateTimer(wxTimerEvent&) {
+    if (updatePending_.exchange(false)) {
+        updateMessageDisplay();
+        updateDataPanel();
     }
 }
 
