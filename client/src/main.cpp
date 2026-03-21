@@ -137,7 +137,15 @@ public:
         dataBuffer_ = std::make_shared<DataBuffer>(runtimeDir + "/data");
 
         // --- Create and start TCP client on separate thread ---
-        tcpClient_ = std::make_unique<TcpClient>("127.0.0.1", 3000, model_, dataBuffer_, dataLogger_);
+        std::string tcpHost;
+        int tcpPort;
+        bool autoReconnect;
+        int reconnectDelay;
+        if (!config.getTcpSettings(tcpHost, tcpPort, autoReconnect, reconnectDelay)) {
+            tcpHost = "127.0.0.1";
+            tcpPort = 3000;
+        }
+        tcpClient_ = std::make_unique<TcpClient>(tcpHost, tcpPort, model_, dataBuffer_, dataLogger_);
         tcpClient_->start();
 
         // For running without a gui
@@ -163,7 +171,7 @@ public:
         cmdThread_ = std::make_unique<std::thread>(&CommandProcessor::start, cmdProcessor_);
 
         // --- Create view ---
-        MainFrame* w = new MainFrame("Panorama Client", model_, dataBuffer_, postProcessor);
+        MainFrame* w = new MainFrame("Panorama Client", model_, dataBuffer_, postProcessor, tcpClient_.get());
         w->Show();
 
  

@@ -7,14 +7,17 @@
 #include "client/sensor.hpp"
 #include "client/settings_dialog.hpp"
 #include "common/panorama_utils.hpp"
+#include "client/tcp_client.hpp"
+#include "client/config_manager.hpp"
 #include <wx/dcbuffer.h>
 #include <wx/sizer.h>
 #include <functional>
 
 MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
     std::shared_ptr<DataBuffer> dataBuffer, std::shared_ptr<PostProcessing> postProcessor,
+    TcpClient* tcpClient,
     const wxPoint& pos, const wxSize& size)
-    : wxFrame(nullptr, wxID_ANY, title, pos, size), model_(model), dataBuffer_(dataBuffer), postProcessor_(postProcessor) {
+    : wxFrame(nullptr, wxID_ANY, title, pos, size), model_(model), dataBuffer_(dataBuffer), postProcessor_(postProcessor), tcpClient_(tcpClient) {
 
     CreateMenuBar();
 
@@ -270,7 +273,23 @@ void MainFrame::OnViewFullscreen(wxCommandEvent& event) {
 
 void MainFrame::OnSettingsOpen(wxCommandEvent& event) {
     SettingsDialog dialog(this);
-    dialog.ShowModal();
+    if (dialog.ShowModal() == wxID_OK && tcpClient_) {
+        ConfigManager& config = ConfigManager::getInstance();
+        std::string host;
+        int port;
+        bool autoReconnect;
+        int reconnectDelay;
+        if (config.getTcpSettings(host, port, autoReconnect, reconnectDelay)) {
+            tcpClient_->reconnectWith(host, port);
+        }
+    }
+}
+
+void MainFrame::OnUpdateTimer(wxTimerEvent&) {
+    if (updatePending_.exchange(false)) {
+        updateMessageDisplay();
+        updateDataPanel();
+    }
 }
 
 void MainFrame::OnUpdateTimer(wxTimerEvent&) {

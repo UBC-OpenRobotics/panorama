@@ -5,7 +5,7 @@
 #include <wx/sizer.h>
 
 SettingsDialog::SettingsDialog(wxWindow* parent)
-    : wxDialog(parent, wxID_ANY, "Settings", wxDefaultPosition, wxSize(500, 300)) {
+    : wxDialog(parent, wxID_ANY, "Settings", wxDefaultPosition, wxSize(500, 400)) {
 
     wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 
