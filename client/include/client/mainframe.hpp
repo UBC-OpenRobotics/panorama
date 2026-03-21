@@ -72,6 +72,14 @@ private:
     wxTextCtrl* messageDisplay_;
     wxPanel* consolePanel_;
 
+    wxTimer updateTimer_;
+    std::atomic<bool> updatePending_{false};
+    size_t displayedMessageCount_ = 0;
+    size_t displayedBufferCount_ = 0;
+
+    void OnUpdateTimer(wxTimerEvent& event);
+
+
 };
 
 #endif // __MAINFRAME__

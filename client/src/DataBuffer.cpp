@@ -114,11 +114,16 @@ void DataBuffer::parseAll(/* std::vector<ParsedData> &out */) {
 
 std::string DataBuffer::toString(const buffer_data_t& buffer_item) {
     //convert one struct of buffer_ into string
+    //bool hasUnit = buffer_item.dataunit != "\0";
 
     std::string temp = "{";
 
     temp = temp + "\"datatype\": \"" + buffer_item.datatype + "\", \"data\": " + std::to_string(buffer_item.data) + ", ";
+
+    //if (hasUnit) {
     temp = temp + "\"dataunit\": \"" + buffer_item.dataunit + "\", ";
+    //}
+    
     temp = temp + "\"timestamp\": " + std::to_string(buffer_item.timestamp);
 
     temp += "}";

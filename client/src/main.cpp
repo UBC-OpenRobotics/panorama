@@ -12,6 +12,7 @@
 #include "client/json_reader.hpp"
 #include "client/config_manager.hpp"
 #include "client/data_logger.hpp"
+#include "client/json_writer.hpp"
 #include <iostream>
 using namespace std;
 
@@ -157,6 +158,10 @@ public:
             return true;
         }
 
+        // --- Create and start JSON writer on separate thread ---
+        jsonWriter_ = std::make_shared<JsonWriter>(dataBuffer_, runtimeDir);
+        jsonWriterThread_ = std::make_unique<std::thread>(&JsonWriter::start, jsonWriter_);
+
         // --- Create view ---
         MainFrame* w = new MainFrame("Panorama Client", model_, dataBuffer_, tcpClient_.get());
         w->Show();
@@ -180,6 +185,16 @@ public:
         if (tcpClient_) {
             tcpClient_->stop();
         }
+
+        // Clean shutdown of JSON writer
+        if (jsonWriter_) {
+            jsonWriter_->stop();
+        }
+
+        if (jsonWriterThread_ && jsonWriterThread_->joinable()) {
+            jsonWriterThread_->join();
+        }
+
         return wxApp::OnExit();
     }
 
@@ -188,6 +203,8 @@ private:
     std::shared_ptr<DataLogger> dataLogger_;
     std::shared_ptr<DataBuffer> dataBuffer_;
     std::unique_ptr<TcpClient> tcpClient_;
+    std::shared_ptr<JsonWriter> jsonWriter_;
+    std::unique_ptr<std::thread> jsonWriterThread_;
 };
 
 wxIMPLEMENT_APP(PanoramaClient);

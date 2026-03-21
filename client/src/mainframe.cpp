@@ -6,6 +6,7 @@
 #include "client/sensor_manager.hpp"
 #include "client/sensor.hpp"
 #include "client/settings_dialog.hpp"
+#include "common/panorama_utils.hpp"
 #include "client/tcp_client.hpp"
 #include "client/config_manager.hpp"
 #include <wx/dcbuffer.h>
@@ -19,6 +20,10 @@ MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
     : wxFrame(nullptr, wxID_ANY, title, pos, size), model_(model), dataBuffer_(dataBuffer), tcpClient_(tcpClient) {
 
     CreateMenuBar();
+
+    updateTimer_.Bind(wxEVT_TIMER, &MainFrame::OnUpdateTimer, this);
+    updateTimer_.Start(10); // milliseconds between GUI refreshes
+
 
     // Create splitter for layout
     wxSplitterWindow* mainSplitter = new wxSplitterWindow(this, wxID_ANY);
@@ -87,9 +92,7 @@ MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
 }
 
 void MainFrame::onModelUpdated() {
-    // Use CallAfter to update GUI seperate from network thread or smthing
-    CallAfter(&MainFrame::updateMessageDisplay);
-    CallAfter(&MainFrame::updateDataPanel);
+    updatePending_.store(true);
 }
 
 void MainFrame::onSensorToggled() {
@@ -97,21 +100,23 @@ void MainFrame::onSensorToggled() {
 }
 
 void MainFrame::updateMessageDisplay() {
+    // Append only new messages
     auto messages = model_->getMessages();
-    wxString text;
-    for (const auto& msg : messages) {
-        text += wxString::FromUTF8(msg.c_str()) + "\n";
+    for (size_t i = displayedMessageCount_; i < messages.size(); ++i) {
+        messageDisplay_->AppendText(wxString::FromUTF8(messages[i].c_str()) + "\n");
     }
+    displayedMessageCount_ = messages.size();
 
-    if (dataBuffer_->size() > 0) {
-        //std::cout << dataBuffer_->toStringAll();
-        text += "\n--- DataBuffer Contents ---\n";
-        text += wxString::FromUTF8(dataBuffer_->toStringAll());
-        text += "--- End of DataBuffer ---\n";
+    // Append only new buffer entries
+    auto allBuffer = dataBuffer_->readAll();
+    size_t i = 0;
+    for (const auto& entry : allBuffer) {
+        if (i >= displayedBufferCount_) {
+            messageDisplay_->AppendText(wxString::FromUTF8(dataBuffer_->toString(entry)));
+        }
+        ++i;
     }
-
-    messageDisplay_->SetValue(text);
-    messageDisplay_->SetInsertionPointEnd();
+    displayedBufferCount_ = allBuffer.size();
 }
 
 void MainFrame::updateDataPanel() {
@@ -245,5 +250,19 @@ void MainFrame::OnSettingsOpen(wxCommandEvent& event) {
         if (config.getTcpSettings(host, port, autoReconnect, reconnectDelay)) {
             tcpClient_->reconnectWith(host, port);
         }
+    }
+}
+
+void MainFrame::OnUpdateTimer(wxTimerEvent&) {
+    if (updatePending_.exchange(false)) {
+        updateMessageDisplay();
+        updateDataPanel();
+    }
+}
+
+void MainFrame::OnUpdateTimer(wxTimerEvent&) {
+    if (updatePending_.exchange(false)) {
+        updateMessageDisplay();
+        updateDataPanel();
     }
 }
