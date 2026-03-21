@@ -69,6 +69,7 @@ private:
     std::shared_ptr<DataBuffer> dataBuffer_;
     wxTextCtrl* messageDisplay_;
     wxPanel* consolePanel_;
+    GraphPanel* graphPanel_;
 
     wxTimer updateTimer_;
     std::atomic<bool> updatePending_{false};
