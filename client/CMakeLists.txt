@@ -18,6 +18,7 @@ endif()
 # Panorama Includes
 target_include_directories(panorama-client
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/external/wxMathPlot_0.2.0/mathplot
 )
 
 
@@ -74,7 +75,7 @@ if(APPLE)
     
     # Apply wxWidgets linker flags - don't use separate_arguments to preserve framework syntax
     string(STRIP "${WX_LINK_FLAGS}" WX_LINK_FLAGS)
-    target_link_libraries(panorama-client PRIVATE ${WX_LINK_FLAGS})
+    target_link_libraries(panorama-client PRIVATE ${WX_LINK_FLAGS} mathplot)
 
     message(STATUS "Using wxWidgets prebuilt from ${WXWIDGETS_PREBUILT_PATH}")
 else() # linux
@@ -100,7 +101,7 @@ else() # linux
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WX_CXX_FLAGS}")
     set(WX_LIBRARIES "${WX_LINK_FLAGS}")
-    target_link_libraries(panorama-client "${WX_LIBRARIES}")
+    target_link_libraries(panorama-client "${WX_LIBRARIES}" mathplot)
 
     message(STATUS "Using locally built wxWidgets via wx-config: ${wxWidgets_CONFIG_EXECUTABLE}")
 endif()

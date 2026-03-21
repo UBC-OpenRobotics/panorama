@@ -11,24 +11,36 @@ class PStreamJSON(PStreamBase):
         self.counter = 0
         self.sample_data = [
             {
-                "sensor": "temperature",
-                "value": 25.5,
-                "unit": "celsius"
+                "data": 25.5,
+                "timestamp": 123032032,
+                "dataunit": "K",
+                "datatype": "temperature",
+                "sensor:": "TM1000",
+                "sensorID": 1
             },
             {
-                "sensor": "humidity",
-                "value": 60.2,
-                "unit": "percent"
+                "data": 60.2,
+                "timestamp": 123032032,
+                "dataunit": "watercontent",
+                "datatype": "humidity",
+                "sensor:": "HD1000",
+                "sensorID": 2
             },
             {
-                "sensor": "pressure",
-                "value": 1013.25,
-                "unit": "hPa"
+                "data": 1013.25,
+                "timestamp": 123032032,
+                "dataunit": "hPa",
+                "datatype": "pressure",
+                "sensor:": "PP1000",
+                "sensorID": 3
             },
             {
-                "sensor": "light",
-                "value": 0.2,
-                "unit": "nm"
+                "data": 0.2,
+                "timestamp": 123032032,
+                "dataunit": "nm",
+                "datatype": "light",
+                "sensor:": "NM1000",
+                "sensorID": 4
             }
         ]
 
@@ -39,16 +51,16 @@ class PStreamJSON(PStreamBase):
         json_obj = self.sample_data[data_index].copy()
 
         # Add timestamp and sequence number
-        json_obj["timestamp"] = time.time()
+        json_obj["timestamp"] = int(time.time())
         json_obj["sequence"] = self.counter
 
         # Add variation to the values
-        if json_obj["sensor"] == "temperature":
-            json_obj["value"] = 25.5 + (self.counter % 10) * 0.5
-        elif json_obj["sensor"] == "humidity":
-            json_obj["value"] = 60.2 + (self.counter % 10) * 0.3
-        elif json_obj["sensor"] == "pressure":
-            json_obj["value"] = 1013.25 + (self.counter % 10) * 0.1
+        if json_obj["datatype"] == "temperature":
+            json_obj["data"] = 25.5 + (self.counter % 10) * 0.5
+        elif json_obj["datatype"] == "humidity":
+            json_obj["data"] = 60.2 + (self.counter % 10) * 0.3
+        elif json_obj["datatype"] == "pressure":
+            json_obj["data"] = 1013.25 + (self.counter % 10) * 0.1
 
         self.counter += 1
 
