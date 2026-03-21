@@ -11,6 +11,7 @@
 #include <vector>
 #include <memory>
 #include <map>
+#include <atomic>
 #include "client/sensor_data_panel.h"
 #include "client/sensor_manager.hpp"
 #include "client/sensor.hpp"
