@@ -136,7 +136,18 @@ public:
         dataBuffer_ = std::make_shared<DataBuffer>(runtimeDir + "/data");
 
         // --- Create and start TCP client on separate thread ---
-        tcpClient_ = std::make_unique<TcpClient>("127.0.0.1", 3000, model_, dataBuffer_, dataLogger_);
+        std::string tcpHost;
+        int tcpPort;
+        bool autoReconnect;
+        int reconnectDelay;
+        if (parser.isNoEspMode()) {
+            tcpHost = "127.0.0.1";
+            tcpPort = 3000;
+        } else if (!config.getTcpSettings(tcpHost, tcpPort, autoReconnect, reconnectDelay)) {
+            tcpHost = "127.0.0.1";
+            tcpPort = 3000;
+        }
+        tcpClient_ = std::make_unique<TcpClient>(tcpHost, tcpPort, model_, dataBuffer_, dataLogger_);
         tcpClient_->start();
 
         // For running without a gui
@@ -155,7 +166,7 @@ public:
         jsonWriterThread_ = std::make_unique<std::thread>(&JsonWriter::start, jsonWriter_);
 
         // --- Create view ---
-        MainFrame* w = new MainFrame("Panorama Client", model_, dataBuffer_);
+        MainFrame* w = new MainFrame("Panorama Client", model_, dataBuffer_, tcpClient_.get());
         w->Show();
 
  

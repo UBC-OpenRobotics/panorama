@@ -18,12 +18,11 @@
 #include "client/graph_panel.hpp"
 #include <set>
 
-
 class MessageModel;
 class DataBuffer;
-//class GraphPanel;
+class TcpClient;
+class Esp32Scanner;
 class SensorDataManager;
-//class SensorDataFrame;  // Add this
 
 class MainFrame : public wxFrame {
 public:
@@ -37,11 +36,17 @@ public:
         ID_EDIT_PREFERENCES,
         ID_VIEW_CONSOLE,
         ID_VIEW_FULLSCREEN,
-        ID_SETTINGS_OPEN
+        ID_SETTINGS_OPEN,
+        ID_BTN_START,
+        ID_BTN_STOP,
+        ID_ESP32_AUTOSTART,
+        ID_ESP32_CONNECT,
+        ID_ESP32_DISMISS
     };
 
     MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
         std::shared_ptr<DataBuffer> dataBuffer,
+        TcpClient* tcpClient,
         const wxPoint& pos = wxDefaultPosition,
         const wxSize& size = wxSize(1200, 800));
 
@@ -65,9 +70,16 @@ private:
     void OnViewConsole(wxCommandEvent& event);
     void OnViewFullscreen(wxCommandEvent& event);
     void OnSettingsOpen(wxCommandEvent& event);
+    void OnStartStream(wxCommandEvent& event);
+    void OnStopStream(wxCommandEvent& event);
+    void OnEsp32Autostart(wxCommandEvent& event);
+    void OnEsp32Connect(wxCommandEvent& event);
+    void OnEsp32Dismiss(wxCommandEvent& event);
+    void ShowEsp32Banner(bool show);
 
     std::shared_ptr<MessageModel> model_;
     std::shared_ptr<DataBuffer> dataBuffer_;
+    TcpClient* tcpClient_;
     wxTextCtrl* messageDisplay_;
     wxPanel* consolePanel_;
     GraphPanel* graphPanel_;
@@ -79,7 +91,12 @@ private:
 
     void OnUpdateTimer(wxTimerEvent& event);
 
-
+    // Auto detecting ESP32s
+    std::unique_ptr<Esp32Scanner> esp32Scanner_;
+    wxPanel* esp32Banner_ = nullptr;
+    wxBoxSizer* mainSizer_ = nullptr;
+    std::atomic<bool> esp32BannerPending_{false};
+    bool esp32BannerVisible_ = false;
 };
 
 #endif // __MAINFRAME__

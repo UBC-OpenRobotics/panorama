@@ -7,20 +7,61 @@
 #include "client/sensor.hpp"
 #include "client/settings_dialog.hpp"
 #include "common/panorama_utils.hpp"
+#include "common/panorama_colours.hpp"
+#include "client/tcp_client.hpp"
+#include "client/config_manager.hpp"
+#include "client/esp32_scanner.hpp"
 #include <wx/dcbuffer.h>
 #include <wx/sizer.h>
 #include <functional>
 
 MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
     std::shared_ptr<DataBuffer> dataBuffer,
+    TcpClient* tcpClient,
     const wxPoint& pos, const wxSize& size)
-    : wxFrame(nullptr, wxID_ANY, title, pos, size), model_(model), dataBuffer_(dataBuffer) {
+    : wxFrame(nullptr, wxID_ANY, title, pos, size), model_(model), dataBuffer_(dataBuffer), tcpClient_(tcpClient) {
 
     CreateMenuBar();
 
     updateTimer_.Bind(wxEVT_TIMER, &MainFrame::OnUpdateTimer, this);
     updateTimer_.Start(10); // milliseconds between GUI refreshes
 
+    // Control bar with start and stop btns
+    wxPanel* controlBar = new wxPanel(this);
+    wxBoxSizer* controlSizer = new wxBoxSizer(wxHORIZONTAL);
+    wxButton* startBtn = new wxButton(controlBar, ID_BTN_START, wxString::FromUTF8("\u25B6 Start"));
+    startBtn->SetBackgroundColour(PCOLOUR_GREEN);
+    startBtn->SetForegroundColour(*wxWHITE);
+    wxButton* stopBtn = new wxButton(controlBar, ID_BTN_STOP, wxString::FromUTF8("\u25A0 Stop"));
+    stopBtn->SetBackgroundColour(PCOLOUR_RED);
+    stopBtn->SetForegroundColour(*wxWHITE);
+    controlSizer->Add(startBtn, 0, wxALL, 4);
+    controlSizer->Add(stopBtn, 0, wxALL, 4);
+    controlBar->SetSizer(controlSizer);
+
+    Bind(wxEVT_BUTTON, &MainFrame::OnStartStream, this, ID_BTN_START);
+    Bind(wxEVT_BUTTON, &MainFrame::OnStopStream, this, ID_BTN_STOP);
+
+    // ESP32 notification banner (hidden by default)
+    esp32Banner_ = new wxPanel(this);
+    esp32Banner_->SetBackgroundColour(PCOLOUR_BLUE);
+    wxBoxSizer* bannerSizer = new wxBoxSizer(wxHORIZONTAL);
+    wxStaticText* bannerLabel = new wxStaticText(esp32Banner_, wxID_ANY,
+        wxString::FromUTF8("  ESP32 device detected on network (192.168.4.1:9000)"));
+    bannerLabel->SetForegroundColour(*wxWHITE);
+    wxButton* autostartBtn = new wxButton(esp32Banner_, ID_ESP32_AUTOSTART, "Connect && Autostart");
+    wxButton* connectBtn = new wxButton(esp32Banner_, ID_ESP32_CONNECT, "Connect");
+    wxButton* dismissBtn = new wxButton(esp32Banner_, ID_ESP32_DISMISS, "Dismiss");
+    bannerSizer->Add(bannerLabel, 1, wxALIGN_CENTER_VERTICAL | wxLEFT, 5);
+    bannerSizer->Add(autostartBtn, 0, wxALL, 3);
+    bannerSizer->Add(connectBtn, 0, wxALL, 3);
+    bannerSizer->Add(dismissBtn, 0, wxALL, 3);
+    esp32Banner_->SetSizer(bannerSizer);
+    esp32Banner_->Hide();
+
+    Bind(wxEVT_BUTTON, &MainFrame::OnEsp32Autostart, this, ID_ESP32_AUTOSTART);
+    Bind(wxEVT_BUTTON, &MainFrame::OnEsp32Connect, this, ID_ESP32_CONNECT);
+    Bind(wxEVT_BUTTON, &MainFrame::OnEsp32Dismiss, this, ID_ESP32_DISMISS);
 
     // Create splitter for layout
     wxSplitterWindow* mainSplitter = new wxSplitterWindow(this, wxID_ANY);
@@ -32,7 +73,7 @@ MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
 
     // Data view area - Sensor Data Panel (rows added dynamically as sensors arrive)
     wxPanel* dataViewPanel = new wxPanel(rightSplitter);
-    dataViewPanel->SetBackgroundColour(wxColour(240, 240, 240)); 
+    dataViewPanel->SetBackgroundColour(PCOLOUR_PANEL_GREY); 
     
     sensorDataGrid = new SensorDataFrame(dataViewPanel, wxArrayString());
     
@@ -50,8 +91,8 @@ MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
     messageDisplay_ = new wxTextCtrl(consolePanel_, wxID_ANY, "",
                                      wxDefaultPosition, wxDefaultSize,
                                      wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP);
-    messageDisplay_->SetBackgroundColour(wxColour(40, 40, 40));
-    messageDisplay_->SetForegroundColour(wxColour(255, 255, 255));
+    messageDisplay_->SetBackgroundColour(PCOLOUR_DARK_GREY);
+    messageDisplay_->SetForegroundColour(PCOLOUR_WHITE);
 
     wxStaticText* consoleLabel = new wxStaticText(consolePanel_, wxID_ANY, "Console");
 
@@ -75,9 +116,11 @@ MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
     mainSplitter->SetSashGravity(1.0); // keeps console constant at 150px
 
     // Layout
-    wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
-    mainSizer->Add(mainSplitter, 1, wxEXPAND);
-    SetSizer(mainSizer);
+    mainSizer_ = new wxBoxSizer(wxVERTICAL);
+    mainSizer_->Add(controlBar, 0, wxEXPAND);
+    mainSizer_->Add(esp32Banner_, 0, wxEXPAND);
+    mainSizer_->Add(mainSplitter, 1, wxEXPAND);
+    SetSizer(mainSizer_);
 
     // Register as observer
     model_->addObserver(std::bind(&MainFrame::onModelUpdated, this));
@@ -86,6 +129,15 @@ MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
     sensorManager_->SetOnSensorToggled(std::bind(&MainFrame::onSensorToggled, this));
 
     CreateStatusBar();
+
+    // Start ESP32 auto-detection scanner
+    esp32Scanner_ = std::make_unique<Esp32Scanner>();
+    esp32Scanner_->setOnAvailabilityChanged([this](bool available) {
+        if (available) {
+            esp32BannerPending_.store(true);
+        }
+    });
+    esp32Scanner_->start();
 }
 
 void MainFrame::onModelUpdated() {
@@ -254,7 +306,28 @@ void MainFrame::OnViewFullscreen(wxCommandEvent& event) {
 
 void MainFrame::OnSettingsOpen(wxCommandEvent& event) {
     SettingsDialog dialog(this);
-    dialog.ShowModal();
+    if (dialog.ShowModal() == wxID_OK && tcpClient_) {
+        ConfigManager& config = ConfigManager::getInstance();
+        std::string host;
+        int port;
+        bool autoReconnect;
+        int reconnectDelay;
+        if (config.getTcpSettings(host, port, autoReconnect, reconnectDelay)) {
+            tcpClient_->reconnectWith(host, port);
+        }
+    }
+}
+
+void MainFrame::OnStartStream(wxCommandEvent& event) {
+    if (tcpClient_) {
+        tcpClient_->sendCommand("START");
+    }
+}
+
+void MainFrame::OnStopStream(wxCommandEvent& event) {
+    if (tcpClient_) {
+        tcpClient_->sendCommand("STOP");
+    }
 }
 
 void MainFrame::OnUpdateTimer(wxTimerEvent&) {
@@ -262,4 +335,48 @@ void MainFrame::OnUpdateTimer(wxTimerEvent&) {
         updateMessageDisplay();
         updateDataPanel();
     }
+
+    // Makesure the esp is actually detected
+    if (esp32BannerPending_.exchange(false)) {
+        ShowEsp32Banner(true);
+    }
+}
+
+void MainFrame::ShowEsp32Banner(bool show) {
+    if (esp32BannerVisible_ == show) return;
+    esp32BannerVisible_ = show;
+    esp32Banner_->Show(show);
+    mainSizer_->Layout();
+}
+
+void MainFrame::OnEsp32Autostart(wxCommandEvent& event) {
+    if (tcpClient_) {
+        tcpClient_->reconnectWith(
+            Esp32Scanner::ESP32_DEFAULT_HOST,
+            Esp32Scanner::ESP32_DEFAULT_PORT);
+        model_->addMessage("Connecting to ESP32 at 192.168.4.1:9000 (autostart)...");
+        tcpClient_->sendCommand("START");
+    }
+    ShowEsp32Banner(false);
+    if (esp32Scanner_) {
+        esp32Scanner_->stop();
+    }
+}
+
+void MainFrame::OnEsp32Connect(wxCommandEvent& event) {
+    if (tcpClient_) {
+        tcpClient_->reconnectWith(
+            Esp32Scanner::ESP32_DEFAULT_HOST,
+            Esp32Scanner::ESP32_DEFAULT_PORT);
+        model_->addMessage("Connecting to ESP32 at 192.168.4.1:9000...");
+    }
+    ShowEsp32Banner(false);
+    
+    if (esp32Scanner_) {
+        esp32Scanner_->stop();
+    }
+}
+
+void MainFrame::OnEsp32Dismiss(wxCommandEvent& event) {
+    ShowEsp32Banner(false);
 }
