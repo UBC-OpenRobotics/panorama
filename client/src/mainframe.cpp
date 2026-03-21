@@ -60,7 +60,7 @@ MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
     consolePanel_->SetSizer(consoleSizer);
 
     // Assemble splitters
-    rightSplitter->SplitHorizontally(dataViewPanel, graphPanel, 180);
+    rightSplitter->SplitHorizontally(dataViewPanel, graphPanel, 200);
     rightSplitter->SetMinimumPaneSize(100);
     rightSplitter->SetSashGravity(0.0); // keeps data panel a 180px, graph takes extra space
     
