@@ -11,9 +11,11 @@
 #include <vector>
 #include <memory>
 #include <map>
+#include <atomic>
 #include "client/sensor_data_panel.h"
 #include "client/sensor_manager.hpp"
 #include "client/sensor.hpp"
+#include "client/graph_panel.hpp"
 #include <set>
 
 class MessageModel;
@@ -80,6 +82,7 @@ private:
     TcpClient* tcpClient_;
     wxTextCtrl* messageDisplay_;
     wxPanel* consolePanel_;
+    GraphPanel* graphPanel_;
 
     wxTimer updateTimer_;
     std::atomic<bool> updatePending_{false};

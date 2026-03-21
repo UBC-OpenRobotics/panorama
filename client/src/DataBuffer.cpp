@@ -56,6 +56,10 @@ size_t DataBuffer::size() const {
     return BufferBase<buffer_data_t>::size();
 }
 
+buffer_data_t DataBuffer::consumeFront() {
+    return BufferBase<buffer_data_t>::extractNextBuffer();
+}
+
 void DataBuffer::clear() {
     BufferBase<buffer_data_t>::clear();
 }

@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+unset GTK_PATH
+
+
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
 ROOT_DIR=$(realpath "$SCRIPT_DIR/..")
 

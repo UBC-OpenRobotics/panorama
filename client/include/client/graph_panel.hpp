@@ -1,23 +1,26 @@
-
 #pragma once
 #include <wx/wx.h>
-#include <wx/dcbuffer.h>
-#include <wx/window.h>
-#include <vector>
+#include <mathplot.h>
+#include <map>
+#include <vector> 
+#include <set>
+#include <string>
 
 class GraphPanel : public wxPanel {
 public:
     GraphPanel(wxWindow* parent);
 
+    void AddDataPoint(const std::string& sensorName, double value, double timestamp);
+    void SetVisibleSensors(const std::set<std::string>& visisble);
+
 private:
-    // Event handlers
-    void OnPaint(wxPaintEvent& event);
-    void OnSize(wxSizeEvent& event);
+    mpWindow* m_plot;
 
-    // Drawing functions
-    void DrawBackground(wxDC& dc);
-    void DrawGrid(wxDC& dc);
-    void DrawAxes(wxDC& dc);
+    //store data for each sensor
+    std::map<std::string, std::vector<std::pair<double, double>>> sensorData_;
+    std::map<std::string, mpFXYVector*> sensorLayers_;
 
-    wxDECLARE_EVENT_TABLE();
+    std::set<std::string> visibleSensors_;
+
+    void UpdateGraph();
 };

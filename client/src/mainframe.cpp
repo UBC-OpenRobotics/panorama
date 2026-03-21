@@ -83,7 +83,7 @@ MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
 
 
     // Graph panel area
-    GraphPanel* graphPanel = new GraphPanel(rightSplitter);
+    graphPanel_ = new GraphPanel(rightSplitter);
 
     // Create text control for displaying messages (Console)
     consolePanel_ = new wxPanel(mainSplitter);
@@ -101,7 +101,7 @@ MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
     consolePanel_->SetSizer(consoleSizer);
 
     // Assemble splitters
-    rightSplitter->SplitHorizontally(dataViewPanel, graphPanel, 180);
+    rightSplitter->SplitHorizontally(dataViewPanel, graphPanel_, 200);
     rightSplitter->SetMinimumPaneSize(100);
     rightSplitter->SetSashGravity(0.0); // keeps data panel a 180px, graph takes extra space
     
@@ -146,6 +146,10 @@ void MainFrame::onModelUpdated() {
 
 void MainFrame::onSensorToggled() {
     sensorDataGrid->SetActiveSensors(sensorManager_->GetEnabledSensorNames());
+
+    auto enabledNames = sensorManager_->GetEnabledSensorNames();
+    std::set<std::string> visible(enabledNames.begin(), enabledNames.end());
+    graphPanel_->SetVisibleSensors(visible);
 }
 
 void MainFrame::updateMessageDisplay() {
@@ -186,7 +190,7 @@ void MainFrame::updateDataPanel() {
 
 
     if (dataBuffer_->size() > 0) {
-        for (buffer_data_t latestData : dataBuffer_->readAll()) {
+        for (buffer_data_t latestData : dataBuffer_->consume()) {
 
             // Skip entries with no data-type (first sensor reading)
             if (latestData.datatype.empty()) continue;
@@ -201,7 +205,19 @@ void MainFrame::updateDataPanel() {
 
             sensorDataGrid->UpdateReading(latestData.datatype, (double)latestData.data, latestData.dataunit);
             
+
+            auto enabledNames = sensorManager_->GetEnabledSensorNames();
+            std::set<std::string> visible(enabledNames.begin(), enabledNames.end());
+            graphPanel_->SetVisibleSensors(visible);
             //std::cout << "Updated " << latestData.datatype << " with value: " << latestData.data << " " << latestData.dataunit << std::endl;
+            
+            if(graphPanel_){
+                graphPanel_->AddDataPoint(
+                    latestData.datatype,
+                    (double)latestData.data,
+                    (double)latestData.timestamp
+                );
+            }
         }
     }
 }
