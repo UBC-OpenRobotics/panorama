@@ -18,6 +18,7 @@ public:
     void start();
     void stop();
     void reconnectWith(const std::string& host, int port);
+    void sendCommand(const std::string& cmd);
     
 private:
     void run();

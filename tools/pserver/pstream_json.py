@@ -15,7 +15,7 @@ class PStreamJSON(PStreamBase):
                 "timestamp": 123032032,
                 "dataunit": "K",
                 "datatype": "temperature",
-                "sensor:": "TM1000",
+                "sensor": "TM1000",
                 "sensorID": 1
             },
             {
@@ -23,7 +23,7 @@ class PStreamJSON(PStreamBase):
                 "timestamp": 123032032,
                 "dataunit": "watercontent",
                 "datatype": "humidity",
-                "sensor:": "HD1000",
+                "sensor": "HD1000",
                 "sensorID": 2
             },
             {
@@ -31,7 +31,7 @@ class PStreamJSON(PStreamBase):
                 "timestamp": 123032032,
                 "dataunit": "hPa",
                 "datatype": "pressure",
-                "sensor:": "PP1000",
+                "sensor": "PP1000",
                 "sensorID": 3
             },
             {
@@ -39,7 +39,7 @@ class PStreamJSON(PStreamBase):
                 "timestamp": 123032032,
                 "dataunit": "nm",
                 "datatype": "light",
-                "sensor:": "NM1000",
+                "sensor": "NM1000",
                 "sensorID": 4
             }
         ]

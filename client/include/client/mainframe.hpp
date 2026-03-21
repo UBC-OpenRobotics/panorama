@@ -36,7 +36,9 @@ public:
         ID_EDIT_PREFERENCES,
         ID_VIEW_CONSOLE,
         ID_VIEW_FULLSCREEN,
-        ID_SETTINGS_OPEN
+        ID_SETTINGS_OPEN,
+        ID_BTN_START,
+        ID_BTN_STOP
     };
 
     MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
@@ -65,6 +67,8 @@ private:
     void OnViewConsole(wxCommandEvent& event);
     void OnViewFullscreen(wxCommandEvent& event);
     void OnSettingsOpen(wxCommandEvent& event);
+    void OnStartStream(wxCommandEvent& event);
+    void OnStopStream(wxCommandEvent& event);
 
     std::shared_ptr<MessageModel> model_;
     std::shared_ptr<DataBuffer> dataBuffer_;

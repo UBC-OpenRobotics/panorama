@@ -24,6 +24,21 @@ MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
     updateTimer_.Bind(wxEVT_TIMER, &MainFrame::OnUpdateTimer, this);
     updateTimer_.Start(10); // milliseconds between GUI refreshes
 
+    // Control bar with start and stop btns
+    wxPanel* controlBar = new wxPanel(this);
+    wxBoxSizer* controlSizer = new wxBoxSizer(wxHORIZONTAL);
+    wxButton* startBtn = new wxButton(controlBar, ID_BTN_START, wxString::FromUTF8("\u25B6 Start"));
+    startBtn->SetBackgroundColour(wxColour(76, 175, 80));
+    startBtn->SetForegroundColour(*wxWHITE);
+    wxButton* stopBtn = new wxButton(controlBar, ID_BTN_STOP, wxString::FromUTF8("\u25A0 Stop"));
+    stopBtn->SetBackgroundColour(wxColour(244, 67, 54));
+    stopBtn->SetForegroundColour(*wxWHITE);
+    controlSizer->Add(startBtn, 0, wxALL, 4);
+    controlSizer->Add(stopBtn, 0, wxALL, 4);
+    controlBar->SetSizer(controlSizer);
+
+    Bind(wxEVT_BUTTON, &MainFrame::OnStartStream, this, ID_BTN_START);
+    Bind(wxEVT_BUTTON, &MainFrame::OnStopStream, this, ID_BTN_STOP);
 
     // Create splitter for layout
     wxSplitterWindow* mainSplitter = new wxSplitterWindow(this, wxID_ANY);
@@ -79,6 +94,7 @@ MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
 
     // Layout
     wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
+    mainSizer->Add(controlBar, 0, wxEXPAND);
     mainSizer->Add(mainSplitter, 1, wxEXPAND);
     SetSizer(mainSizer);
 
@@ -253,10 +269,15 @@ void MainFrame::OnSettingsOpen(wxCommandEvent& event) {
     }
 }
 
-void MainFrame::OnUpdateTimer(wxTimerEvent&) {
-    if (updatePending_.exchange(false)) {
-        updateMessageDisplay();
-        updateDataPanel();
+void MainFrame::OnStartStream(wxCommandEvent& event) {
+    if (tcpClient_) {
+        tcpClient_->sendCommand("START");
+    }
+}
+
+void MainFrame::OnStopStream(wxCommandEvent& event) {
+    if (tcpClient_) {
+        tcpClient_->sendCommand("STOP");
     }
 }
 
