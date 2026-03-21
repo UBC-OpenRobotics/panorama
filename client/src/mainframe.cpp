@@ -7,8 +7,10 @@
 #include "client/sensor.hpp"
 #include "client/settings_dialog.hpp"
 #include "common/panorama_utils.hpp"
+#include "common/panorama_colours.hpp"
 #include "client/tcp_client.hpp"
 #include "client/config_manager.hpp"
+#include "client/esp32_scanner.hpp"
 #include <wx/dcbuffer.h>
 #include <wx/sizer.h>
 #include <functional>
