@@ -1,4 +1,5 @@
 #include "client/graph_panel.hpp"
+#include "common/panorama_colours.hpp"
 #include <algorithm>
 #include <cmath>
 
@@ -10,7 +11,7 @@ wxEND_EVENT_TABLE()
 GraphPanel::GraphPanel(wxWindow* parent)
 	: wxPanel(parent, wxID_ANY) {
 	
-	SetBackgroundColour(wxColour(255, 255, 255));
+	SetBackgroundColour(PCOLOUR_WHITE);
 	SetBackgroundStyle(wxBG_STYLE_PAINT); // double buffering so smoother
 }
 
@@ -36,7 +37,7 @@ void GraphPanel::OnSize(wxSizeEvent& event) {
 void GraphPanel::DrawBackground(wxDC& dc) {
 	wxSize size = GetClientSize();
 	
-	dc.SetBrush(wxBrush(wxColour(220, 220, 220))); 
+	dc.SetBrush(wxBrush(PCOLOUR_LIGHT_GREY)); 
 
 	dc.SetPen(*wxTRANSPARENT_PEN);
 
@@ -53,7 +54,7 @@ void GraphPanel::DrawGrid(wxDC& dc) {
 	int graphHeight = size.GetHeight() - topMargin - bottomMargin;
 	int graphWidth = size.GetWidth() - leftMargin - 20;
 
-	dc.SetPen(wxPen(wxColour(90, 90, 90), 1));
+	dc.SetPen(wxPen(PCOLOUR_GREY, 1));
 
 	// horizontal grid lines
 	for (int i = 0; i <= 4; i++) {
@@ -78,7 +79,7 @@ void GraphPanel::DrawAxes(wxDC& dc){
 	int graphHeight = size.GetHeight() - topMargin - bottomMargin;
 	int graphWidth = size.GetWidth() - leftMargin - 20;
 
-	dc.SetPen(wxPen(wxColour(0, 0, 0), 2));
+	dc.SetPen(wxPen(PCOLOUR_BLACK, 2));
 
 	// draw y-axis
 	dc.DrawLine(leftMargin, topMargin, leftMargin, topMargin + graphHeight);

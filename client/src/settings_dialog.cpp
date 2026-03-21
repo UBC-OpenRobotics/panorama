@@ -118,7 +118,7 @@ void SettingsDialog::saveSettings() {
 
 void SettingsDialog::OnSave(wxCommandEvent& event) {
     saveSettings();
-    wxMessageBox("Settings saved successfully.\n\nNote: Some settings may require an application restart to take effect.",
+    wxMessageBox("Settings saved successfully.\n\nTCP connection settings will take effect immediately.",
                  "Settings Saved", wxOK | wxICON_INFORMATION);
     EndModal(wxID_OK);
 }

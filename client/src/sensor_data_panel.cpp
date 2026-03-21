@@ -1,4 +1,5 @@
 #include "client/sensor_data_panel.h"
+#include "common/panorama_colours.hpp"
 #include <wx/datetime.h>
 
 SensorDataFrame::SensorDataFrame(wxWindow* parent, const wxArrayString& sensorNames)
@@ -111,11 +112,11 @@ void SensorDataFrame::UpdateReading(const std::string& sensorName, double value,
     
     // Color 
     if (value > 50.0) {
-        grid_->SetCellBackgroundColour(row, 1, wxColour(255, 200, 200)); // Light red
+        grid_->SetCellBackgroundColour(row, 1, PCOLOUR_LIGHT_RED);
     } else if (value > 25.0) {
-        grid_->SetCellBackgroundColour(row, 1, wxColour(255, 255, 200)); // Light yellow
+        grid_->SetCellBackgroundColour(row, 1, PCOLOUR_LIGHT_YELLOW);
     } else {
-        grid_->SetCellBackgroundColour(row, 1, wxColour(200, 255, 200)); // Light green
+        grid_->SetCellBackgroundColour(row, 1, PCOLOUR_LIGHT_GREEN);
     }
     
     grid_->ForceRefresh();
