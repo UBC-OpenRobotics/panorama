@@ -6,9 +6,13 @@ const char* SSID = "ESP32-Interface";
 const char* PASS = "12345678";
 const uint16_t PORT = 9000;
 
+// Onboard LED pin
+const int LED_PIN = 2;
+
 // HC-SR04 pins (adjust to match your wiring)
 const int TRIG_PIN = 5;
 const int ECHO_PIN = 18;
+const unsigned long BLINK_DELAY_MS = 250;
 
 WiFiServer server(PORT);
 WiFiClient client;
@@ -17,6 +21,8 @@ bool sendEnabled = false;
 unsigned long sampleInterval = 1000; // ms
 unsigned long lastSend = 0;
 unsigned long startTime = 0;
+unsigned long lastBlink = 0;
+bool ledState = false;
 
 uint32_t seq = 0;
 const uint16_t SENSOR_ID = 1;
@@ -46,6 +52,10 @@ float readUltrasonicCm() {
 
 void setup() {
   Serial.begin(115200);
+
+  // onboard LED
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
 
   // ultrasonic sensor pins
   pinMode(TRIG_PIN, OUTPUT);
@@ -95,6 +105,18 @@ void loop() {
     Serial.println("Backend connected");
   }
 
+  // update onboard LED: solid when connected, blink when disconnected
+  if (client && client.connected()) {
+    digitalWrite(LED_PIN, HIGH);
+  } else {
+    unsigned long now = millis();
+    if (now - lastBlink >= BLINK_DELAY_MS) {
+      lastBlink = now;
+      ledState = !ledState;
+      digitalWrite(LED_PIN, ledState ? HIGH : LOW);
+    }
+  }
+
   // read commands
   if (client && client.connected() && client.available()) {
     String cmd = client.readStringUntil('\n');
@@ -113,10 +135,11 @@ void loop() {
       String json =
         "{"
           "\"sensor\":\"" + String(SENSOR_NAME) + "\","
+          "\"unit\":\"cm\","
+          "\"value\":" + String(distanceCm, 2) + ","
           "\"sensor_id\":" + String(SENSOR_ID) + ","
           "\"seq\":" + String(seq++) + ","
-          "\"timestamp_ms\":" + String(timestamp) + ","
-          "\"value\":" + String(distanceCm, 2) +
+          "\"timestamp_ms\":" + String(timestamp) +
         "}\n";
 
       client.print(json);

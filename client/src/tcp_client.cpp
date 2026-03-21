@@ -92,11 +92,6 @@ void TcpClient::run() {
                 logger_->logJsonData(received);
             }
 
-            // print json
-            //pinfo("Received JSON: ", received);
-            reader.exportToBuffer(received);
-
-
             // Parse JSON and write to DataBuffer
             buffer_data_t parsedData = reader.exportToBuffer(received);
             dataBuffer_->writeData(parsedData);
@@ -104,6 +99,13 @@ void TcpClient::run() {
             model_->addMessage("Received: " + received);
         }
     }
+}
+
+void TcpClient::reconnectWith(const std::string& host, int port) {
+    host_ = host;
+    port_ = port;
+    // Force a disconnectso the run loop reconnects with new settings
+    cleanup();
 }
 
 void TcpClient::reconnect() {

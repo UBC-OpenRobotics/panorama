@@ -17,6 +17,7 @@ public:
     
     void start();
     void stop();
+    void reconnectWith(const std::string& host, int port);
     
 private:
     void run();

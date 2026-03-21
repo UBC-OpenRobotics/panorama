@@ -19,6 +19,7 @@
 
 class MessageModel;
 class DataBuffer;
+class TcpClient;
 //class GraphPanel;
 class SensorDataManager;
 //class SensorDataFrame;  // Add this
@@ -40,6 +41,7 @@ public:
 
     MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
         std::shared_ptr<DataBuffer> dataBuffer,
+        TcpClient* tcpClient,
         const wxPoint& pos = wxDefaultPosition,
         const wxSize& size = wxSize(1200, 800));
 
@@ -66,6 +68,7 @@ private:
 
     std::shared_ptr<MessageModel> model_;
     std::shared_ptr<DataBuffer> dataBuffer_;
+    TcpClient* tcpClient_;
     wxTextCtrl* messageDisplay_;
     wxPanel* consolePanel_;
 
