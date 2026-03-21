@@ -14,6 +14,7 @@
 #include "client/sensor_data_panel.h"
 #include "client/sensor_manager.hpp"
 #include "client/sensor.hpp"
+#include "client/graph_panel.hpp"
 #include <set>
 
 
