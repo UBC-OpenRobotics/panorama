@@ -1,11 +1,12 @@
 #include <wx/wx.h>
 #include <client/sensor_manager.hpp>
 #include "client/settings_dialog.hpp"
+#include "common/panorama_colours.hpp"
 
 SensorManagerPanel::SensorManagerPanel(wxWindow* parent)
 	: wxPanel(parent, wxID_ANY)
 {
-	SetBackgroundColour(wxColour(150, 150, 150));
+	SetBackgroundColour(PCOLOUR_MID_GREY);
 
 	sizer_ = new wxBoxSizer(wxVERTICAL);
 
