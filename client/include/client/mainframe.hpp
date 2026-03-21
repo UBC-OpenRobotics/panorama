@@ -14,6 +14,7 @@
 #include "client/sensor_data_panel.h"
 #include "client/sensor_manager.hpp"
 #include "client/sensor.hpp"
+#include "client/graph_panel.hpp"
 #include <set>
 
 
@@ -68,7 +69,7 @@ private:
     std::shared_ptr<DataBuffer> dataBuffer_;
     wxTextCtrl* messageDisplay_;
     wxPanel* consolePanel_;
-
+    GraphPanel* graphPanel_; 
 };
 
 #endif // __MAINFRAME__
