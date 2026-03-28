@@ -51,20 +51,19 @@ void CommandProcessor::processCommand(const std::string& command) {
 
     } else if (cmdType == "size"){
         std::cout << "Buffer size: " << dataBuffer_->size() << std::endl;
+
     } else if (cmdType == "reset"){
         //reset all post processing parameters to default values
-        postProcessor_->addOffset(0.0);
-        postProcessor_->addScaling(1.0);
-        //postProcessor_->reset();
-        //std::cout << "Post processing parameters reset to default values." << std::endl;
+        postProcessor_->reset();
+
     } else if (cmdType == "setOffset"){
         float offset = std::stof(firstParameter);
         postProcessor_->addOffset(offset);
-        //std::cout << "Offset set to: " << offset << std::endl;
+
     } else if (cmdType == "setScale"){
         float scaleFactor = std::stof(firstParameter);
         postProcessor_->addScaling(scaleFactor);
-        //std::cout << "Scale factor set to: " << scaleFactor << std::endl;
+
     } else {
         std::cout << "Unknown command: " << command << std::endl;
     }
