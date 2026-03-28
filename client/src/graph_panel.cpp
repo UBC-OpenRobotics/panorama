@@ -29,7 +29,7 @@ GraphPanel::GraphPanel(wxWindow* parent)
 void GraphPanel::AddDataPoint(const std::string& sensorName, double value, double timestamp){
 	sensorData_[sensorName].push_back({timestamp, value});
 
-	// Keeps the first 100 data points
+	// FIFO buffer to keep up to NUM_DATA_POINTS samples at a time
 	if (sensorData_[sensorName].size() > config::NUM_DATA_POINTS) {
 		sensorData_[sensorName].erase(sensorData_[sensorName].begin());
 	}
@@ -44,11 +44,11 @@ void GraphPanel::UpdateGraph(){
 
 	// colours for the graph
 	wxColour colours[] = {
-		wxColour(255, 0, 0), 
-		wxColour(0, 255, 0), 
-		wxColour(0, 0, 255), 
-		wxColour(255, 102, 178),
-		wxColour(178, 102, 255)
+		wxColour(255, 0, 0),		// red 
+		wxColour(0, 255, 0), 		// green
+		wxColour(0, 0, 255), 		// blue
+		wxColour(255, 102, 178),	// pink
+		wxColour(178, 102, 255)		// purple
 	};
 	int colourIndex = 0; 
 
