@@ -1,10 +1,6 @@
 #include <WiFi.h>
 #include <Arduino.h>
-
-// Wi-Fi Access Point credentials
-const char* SSID = "ESP32-Interface";
-const char* PASS = "12345678";
-const uint16_t PORT = 9000;
+#include "panorama_server.h"
 
 // Onboard LED pin
 const int LED_PIN = 2;
@@ -14,8 +10,7 @@ const int TRIG_PIN = 5;
 const int ECHO_PIN = 18;
 const unsigned long BLINK_DELAY_MS = 250;
 
-WiFiServer server(PORT);
-WiFiClient client;
+PanoramaServer panoramaServer;
 
 bool sendEnabled = false;
 unsigned long sampleInterval = 1000; // ms
@@ -43,6 +38,12 @@ const SensorConfig sensors[] = {
 };
 const int NUM_SENSORS = sizeof(sensors) / sizeof(sensors[0]);
 
+const PanoramaServerConfig SERVER_CONFIG = {
+  "ESP32-Interface",
+  "12345678",
+  9000
+};
+
 void setup() {
   Serial.begin(115200);
 
@@ -55,18 +56,12 @@ void setup() {
   pinMode(ECHO_PIN, INPUT);
   digitalWrite(TRIG_PIN, LOW);
 
-  WiFi.mode(WIFI_AP);
-  WiFi.softAP(SSID, PASS);
-  IPAddress ip = WiFi.softAPIP();
-  Serial.printf("AP started: %s (%s)\n", SSID, ip.toString().c_str());
-
-  server.begin();
-  server.setNoDelay(true);
+  panoramaServer.init(SERVER_CONFIG);
+  panoramaServer.start();
 }
 
-void handleCommand(String cmd) {
-  cmd.trim();
-  cmd.toUpperCase();
+void handleCommand(const PanoramaCommand& command) {
+  const String& cmd = command.cmd;
 
   if (cmd.startsWith("START")) {
     int spaceIdx = cmd.indexOf(' ');
@@ -89,17 +84,10 @@ void handleCommand(String cmd) {
 }
 
 void loop() {
-  // accept new client
-  WiFiClient newClient = server.available();
-  if (newClient) {
-    if (client && client.connected()) client.stop();
-    client = newClient;
-    client.print(F("{\"type\":\"status\",\"msg\":\"connected\"}\n"));
-    Serial.println("Backend connected");
-  }
+  panoramaServer.pollClient();
 
   // update onboard LED: solid when connected, blink when disconnected
-  if (client && client.connected()) {
+  if (panoramaServer.isClientConnected()) {
     digitalWrite(LED_PIN, HIGH);
   } else {
     unsigned long now = millis();
@@ -110,13 +98,12 @@ void loop() {
     }
   }
 
-  // read commands
-  if (client && client.connected() && client.available()) {
-    String cmd = client.readStringUntil('\n');
-    handleCommand(cmd);
+  PanoramaCommand command;
+  if (panoramaServer.getCommand(command)) {
+    handleCommand(command);
   }
 
-  if (sendEnabled && client && client.connected()) {
+  if (sendEnabled && panoramaServer.isClientConnected()) {
     unsigned long now = millis();
     if (now - lastSend >= sampleInterval) {
       lastSend = now;
@@ -126,20 +113,17 @@ void loop() {
       float value = s.baseValue + (seq % 10) * s.variation;
       unsigned long timestamp = now - startTime;
 
-      String json =
-        "{"
-          "\"sensor\":\"" + String(s.sensor) + "\","
-          "\"dataunit\":\"" + String(s.dataunit) + "\","
-          "\"data\":" + String(value, 2) + ","
-          "\"datatype\":\"" + String(s.datatype) + "\","
-          "\"sensorID\":" + String(s.sensorID) + ","
-          "\"seq\":" + String(seq++) + ","
-          "\"timestamp\":" + String(timestamp) +
-        "}\n";
+      PanoramaPacket packet = {
+        s.sensor,
+        s.dataunit,
+        s.datatype,
+        s.sensorID,
+        value,
+        timestamp
+      };
 
-      client.print(json);
-      Serial.print("Sent: ");
-      Serial.print(json);
+      panoramaServer.sendPacket(packet);
+      seq++;
     }
   }
 }
