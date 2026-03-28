@@ -31,17 +31,35 @@ struct SensorConfig {
   const char* dataunit;
   const char* datatype;
   uint16_t sensorID;
-  float baseValue;
-  float variation;
 };
 
-const SensorConfig sensors[] = {
-  {"TM1000", "K",            "temperature", 1, 25.5f,    0.5f},
-  {"HD1000", "watercontent",  "humidity",    2, 60.2f,    0.3f},
-  {"PP1000", "hPa",          "pressure",    3, 1013.25f, 0.1f},
-  {"NM1000", "nm",           "light",       4, 0.2f,     0.0f},
+const SensorConfig ultrasonicSensor = {
+  "US1000",
+  "cm",
+  "distance",
+  4,
 };
-const int NUM_SENSORS = sizeof(sensors) / sizeof(sensors[0]);
+
+float readUltrasonicCm() {
+  // ensure trigger is low
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+
+  // 10 µs HIGH pulse to trigger measurement
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+
+  // measure echo time (timeout 30 ms ≈ 5 m)
+  unsigned long duration = pulseIn(ECHO_PIN, HIGH, 30000);
+  if (duration == 0) {
+    return -1.0f; // no echo
+  }
+
+  // speed of sound ≈ 0.0343 cm/µs, divide by 2 (out and back)
+  float distanceCm = (duration * 0.0343f) / 2.0f;
+  return distanceCm;
+}
 
 void setup() {
   Serial.begin(115200);
@@ -121,9 +139,8 @@ void loop() {
     if (now - lastSend >= sampleInterval) {
       lastSend = now;
 
-      int idx = seq % NUM_SENSORS;
-      const SensorConfig& s = sensors[idx];
-      float value = s.baseValue + (seq % 10) * s.variation;
+      const SensorConfig& s = ultrasonicSensor;
+      float value = readUltrasonicCm();
       unsigned long timestamp = now - startTime;
 
       String json =
