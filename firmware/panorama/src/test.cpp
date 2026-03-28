@@ -18,8 +18,6 @@ WiFiServer server(PORT);
 WiFiClient client;
 
 bool sendEnabled = false;
-unsigned long sampleInterval = 1000; // ms
-unsigned long lastSend = 0;
 unsigned long startTime = 0;
 unsigned long lastBlink = 0;
 bool ledState = false;
@@ -87,15 +85,10 @@ void handleCommand(String cmd) {
   cmd.toUpperCase();
 
   if (cmd.startsWith("START")) {
-    int spaceIdx = cmd.indexOf(' ');
-    if (spaceIdx > 0) {
-      float freq = cmd.substring(spaceIdx + 1).toFloat();
-      if (freq > 0) sampleInterval = 1000.0 / freq;
-    }
     startTime = millis();
     seq = 0;              // reset sequence on start
     sendEnabled = true;
-    Serial.printf("Signal ON, freq=%.1f Hz\n", 1000.0 / sampleInterval);
+    Serial.println("Signal ON");
 
   } else if (cmd.startsWith("STOP")) {
     sendEnabled = false;
@@ -136,27 +129,24 @@ void loop() {
 
   if (sendEnabled && client && client.connected()) {
     unsigned long now = millis();
-    if (now - lastSend >= sampleInterval) {
-      lastSend = now;
 
-      const SensorConfig& s = ultrasonicSensor;
-      float value = readUltrasonicCm();
-      unsigned long timestamp = now - startTime;
+    const SensorConfig& s = ultrasonicSensor;
+    float value = readUltrasonicCm();
+    unsigned long timestamp = now - startTime;
 
-      String json =
-        "{"
-          "\"sensor\":\"" + String(s.sensor) + "\","
-          "\"dataunit\":\"" + String(s.dataunit) + "\","
-          "\"data\":" + String(value, 2) + ","
-          "\"datatype\":\"" + String(s.datatype) + "\","
-          "\"sensorID\":" + String(s.sensorID) + ","
-          "\"seq\":" + String(seq++) + ","
-          "\"timestamp\":" + String(timestamp) +
-        "}\n";
+    String json =
+      "{"
+        "\"sensor\":\"" + String(s.sensor) + "\","
+        "\"dataunit\":\"" + String(s.dataunit) + "\","
+        "\"data\":" + String(value, 2) + ","
+        "\"datatype\":\"" + String(s.datatype) + "\","
+        "\"sensorID\":" + String(s.sensorID) + ","
+        "\"seq\":" + String(seq++) + ","
+        "\"timestamp\":" + String(timestamp) +
+      "}\n";
 
-      client.print(json);
-      Serial.print("Sent: ");
-      Serial.print(json);
-    }
+    client.print(json);
+    Serial.print("Sent: ");
+    Serial.print(json);
   }
 }
