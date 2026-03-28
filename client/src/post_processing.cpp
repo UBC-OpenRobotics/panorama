@@ -23,10 +23,9 @@ void PostProcessing::addScaling(float scaleFactor) {
 }
 
 void PostProcessing::reset() {
-    std::lock_guard<std::mutex> lock(mutex_);
     //reset all post processing parameters to default values
-    addOffset(0); //reset offset to 0;
-    addScaling(1.0); //reset scale factor to 1;
+    addOffset(0);
+    addScaling(1.0);
 }
 
 void PostProcessing::updateDataBase() {
