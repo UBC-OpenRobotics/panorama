@@ -9,10 +9,11 @@ const uint16_t PORT = 9000;
 // Onboard LED pin
 const int LED_PIN = 2;
 
-// HC-SR04 pins (adjust to match your wiring)
+// HC-SR04 pins
 const int TRIG_PIN = 5;
 const int ECHO_PIN = 18;
 const unsigned long BLINK_DELAY_MS = 250;
+const unsigned long ULTRASONIC_SEND_DELAY_MS = 50;
 
 WiFiServer server(PORT);
 WiFiClient client;
@@ -32,7 +33,7 @@ struct SensorConfig {
 };
 
 const SensorConfig ultrasonicSensor = {
-  "US1000",
+  "HR-SR04",
   "cm",
   "distance",
   4,
@@ -148,5 +149,6 @@ void loop() {
     client.print(json);
     Serial.print("Sent: ");
     Serial.print(json);
+    delay(ULTRASONIC_SEND_DELAY_MS);
   }
 }
