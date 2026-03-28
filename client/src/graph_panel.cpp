@@ -1,4 +1,5 @@
 #include "client/graph_panel.hpp"
+#include "config/panorama_config.hpp"
 
 GraphPanel::GraphPanel(wxWindow* parent)
 	: wxPanel(parent, wxID_ANY) {
@@ -17,7 +18,7 @@ GraphPanel::GraphPanel(wxWindow* parent)
 	m_plot->AddLayer(yAxis);
 	m_plot->AddLayer(xAxis);
 
-	m_plot->SetMargins(30, 30, 85, 60);
+	m_plot->SetMargins(config::TOP_MARGIN,config::RIGHT_MARGIN, config::BOTTOM_MARGIN, config::LEFT_MARGIN);
 	m_plot->Fit();
 
 	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
@@ -29,7 +30,7 @@ void GraphPanel::AddDataPoint(const std::string& sensorName, double value, doubl
 	sensorData_[sensorName].push_back({timestamp, value});
 
 	// Keeps the first 100 data points
-	if (sensorData_[sensorName].size() > 100) {
+	if (sensorData_[sensorName].size() > config::NUM_DATA_POINTS) {
 		sensorData_[sensorName].erase(sensorData_[sensorName].begin());
 	}
 	UpdateGraph();
@@ -70,7 +71,7 @@ void GraphPanel::UpdateGraph(){
 		layer->SetData(xs, ys);
 		layer->SetContinuity(true); 
 
-		wxPen pen(colours[colourIndex % 5], 2);
+		wxPen pen(colours[colourIndex % config::NUM_COLOURS], 2);
 		layer->SetPen(pen);
 		
 		m_plot->AddLayer(layer);
