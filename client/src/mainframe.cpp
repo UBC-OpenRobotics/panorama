@@ -172,16 +172,7 @@ void MainFrame::updateDataPanel() {
             graphPanel_->SetVisibleSensors(visible);
             //std::cout << "Updated " << latestData.datatype << " with value: " << latestData.data << " " << latestData.dataunit << std::endl;
             
-            if (graphPanel_) {
-                graphPanel_->wxCallAfter(
-                    &GraphPanel::AddDataPoint,
-                    latestData.datatype,
-                    (double)latestData.data,
-                    (double)latestData.timestamp
-                );
-            }
-            
-            /*
+
             if(graphPanel_){
                 graphPanel_->AddDataPoint(
                     latestData.datatype,
@@ -189,7 +180,8 @@ void MainFrame::updateDataPanel() {
                     (double)latestData.timestamp
                 );
             }
-            */
+            
+            
         }
     }
 }

@@ -155,6 +155,7 @@ public:
         jsonWriter_ = std::make_shared<JsonWriter>(dataBuffer_, runtimeDir);
         jsonWriterThread_ = std::make_unique<std::thread>(&JsonWriter::start, jsonWriter_);
 
+        // --- Create PostProcessing as a shared pointer ---
         auto postProcessor = std::make_shared<PostProcessing>();
 
         // --- Create CommandProcessor on a separate thread---
