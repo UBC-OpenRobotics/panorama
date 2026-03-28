@@ -6,7 +6,6 @@
 #include <set>
 #include <string>
 #include <memory>
-#include <mutex>
 #include "client/post_processing.hpp"
 
 class GraphPanel : public wxPanel {
@@ -38,5 +37,4 @@ private:
     wxDECLARE_EVENT_TABLE();
 
     std::shared_ptr<PostProcessing> postProcessor_;
-    std::mutex dataMutex_;
 };
