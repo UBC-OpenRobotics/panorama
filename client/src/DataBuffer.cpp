@@ -153,6 +153,11 @@ std::string DataBuffer::toStringAll() {
     return res;
 }
 
+void DataBuffer::printAll() {
+    //print all buffer_ as string
+    std::cout << toStringAll() << std::endl;
+}
+
 void DataBuffer::exportBuffer(std::string exportPath) {
     //Export the entire buffer (make a local JSON file under client/src/)
     
