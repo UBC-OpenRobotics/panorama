@@ -96,21 +96,21 @@ void SensorDataFrame::AddSensorRow(const std::string& sensorName) {
     grid_->ForceRefresh();
 }
 
-void SensorDataFrame::UpdateReading(const std::string& sensorName, double value, const std::string& unit) {
+void SensorDataFrame::UpdateReading(const std::string& sensorName, double value, const std::string& unit, bool refresh) {
     int row = FindSensorRow(sensorName);
     if (row == -1) return;
-    
-    
+
+
     wxString valueStr = wxString::Format("%.2f %s", value, unit);
     grid_->SetCellValue(row, 1, valueStr);
-    
-    
+
+
     wxString timestamp = wxDateTime::Now().FormatISOTime();
     grid_->SetCellValue(row, 2, timestamp);
 
     //std::cout << "Updated " << sensorName << " with value: " << valueStr.ToStdString() << " at " << timestamp.ToStdString() << std::endl;
-    
-    // Color 
+
+    // Color
     if (value > 50.0) {
         grid_->SetCellBackgroundColour(row, 1, PCOLOUR_LIGHT_RED);
     } else if (value > 25.0) {
@@ -118,7 +118,13 @@ void SensorDataFrame::UpdateReading(const std::string& sensorName, double value,
     } else {
         grid_->SetCellBackgroundColour(row, 1, PCOLOUR_LIGHT_GREEN);
     }
-    
+
+    if (refresh) {
+        grid_->ForceRefresh();
+    }
+}
+
+void SensorDataFrame::RefreshGrid() {
     grid_->ForceRefresh();
 }
 

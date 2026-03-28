@@ -9,7 +9,8 @@ public:
     SensorDataFrame(wxWindow* parent, const wxArrayString& sensorNames);
     
     void AddSensorRow(const std::string& sensorName);
-    void UpdateReading(const std::string& sensorName, double value, const std::string& unit = "");
+    void UpdateReading(const std::string& sensorName, double value, const std::string& unit = "", bool refresh = true);
+    void RefreshGrid();
     void ClearReadings();
     void SetActiveSensors(const std::vector<std::string>& sensors);
     
