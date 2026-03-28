@@ -8,6 +8,7 @@ namespace config{
     constexpr int RIGHT_MARGIN = 30;
     constexpr int BOTTOM_MARGIN = 85;
     constexpr int LEFT_MARGIN = 60;
+    constexpr int BRUSH_WIDTH = 2; 
 }
 
 #endif

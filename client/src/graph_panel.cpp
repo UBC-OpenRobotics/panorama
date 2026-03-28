@@ -71,7 +71,7 @@ void GraphPanel::UpdateGraph(){
 		layer->SetData(xs, ys);
 		layer->SetContinuity(true); 
 
-		wxPen pen(colours[colourIndex % config::NUM_COLOURS], 2);
+		wxPen pen(colours[colourIndex % config::NUM_COLOURS], config::BRUSH_WIDTH);
 		layer->SetPen(pen);
 		
 		m_plot->AddLayer(layer);
