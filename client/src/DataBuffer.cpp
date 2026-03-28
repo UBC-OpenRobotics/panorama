@@ -12,19 +12,10 @@ DataBuffer::~DataBuffer() {
 }
 
 void DataBuffer::writeData(buffer_data_t jsonChunk) {
-    // Append the new chunk of raw JSON data to the buffer. This functions only job is to store raw
-    // inbound data in a way that doesn't lose anything later the parser will call extractNextJson()
-    // parseNextJson()
-   // std::cout << "[DataBuffer] Writing data to buffer:" << std::endl;
-   // std::cout << "[DataBuffer]   a: '" << jsonChunk.a << "' a_data: " << jsonChunk.a_data << std::endl;
-   // std::cout << "[DataBuffer]   b: '" << jsonChunk.b << "' b_data: " << jsonChunk.b_data << std::endl;
-   // std::cout << "[DataBuffer]   Buffer size before write: " << size() << std::endl;
-   
-   //get the runtime directory path from DataLogger to export buffer if it exceeds threshold
 
-   //DataLogger logger;
-   //std::string exportPath = logger.getLogFilePath();
-
+    //before writing, do necessary post processing on jsonChunk
+    //jsonChunk.data = PostProcessing.processData(jsonChunk.data);
+    
     write(jsonChunk);
 
     if ((int)size() > FLUSH_THRESHOLD * MAX_BUFFER_SIZE / 100) {
@@ -32,9 +23,7 @@ void DataBuffer::writeData(buffer_data_t jsonChunk) {
         exportBuffer(logFilePath_);
     }
 
-    // std::cout << "[DataBuffer]   Buffer size after write: " << size() << std::endl;
-    // std::cout << buffer_.size();
-    // std::cout << "[DataBuffer] : " << toStringAll() << std::endl;
+    
 }
 
 void DataBuffer::setData(buffer_data_t jsonData) {

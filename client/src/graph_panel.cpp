@@ -1,7 +1,7 @@
 #include "client/graph_panel.hpp"
 
-GraphPanel::GraphPanel(wxWindow* parent)
-	: wxPanel(parent, wxID_ANY) {
+GraphPanel::GraphPanel(wxWindow* parent, std::shared_ptr<PostProcessing> postProcessor)
+	: wxPanel(parent, wxID_ANY), postProcessor_(postProcessor) {
 	
 	m_plot = new mpWindow(this, wxID_ANY);
 	m_plot-> EnableDoubleBuffer(true);
@@ -26,6 +26,8 @@ GraphPanel::GraphPanel(wxWindow* parent)
 }
 
 void GraphPanel::AddDataPoint(const std::string& sensorName, double value, double timestamp){
+	std::lock_guard<std::mutex> lock(dataMutex_);
+
 	sensorData_[sensorName].push_back({timestamp, value});
 
 	// Keeps the first 100 data points
@@ -36,11 +38,13 @@ void GraphPanel::AddDataPoint(const std::string& sensorName, double value, doubl
 } 
 
 void GraphPanel::UpdateGraph(){
+	std::lock_guard<std::mutex> lock(dataMutex_);
+
 	for (auto& pair : sensorLayers_){
 		m_plot->DelLayer(pair.second,true);
 	}
 	sensorLayers_.clear(); 
-
+	
 	// colours for the graph
 	wxColour colours[] = {
 		wxColour(255, 0, 0), 
@@ -63,7 +67,13 @@ void GraphPanel::UpdateGraph(){
 		std::vector<double> xs, ys;
 		for(const auto& point : data){
 			xs.push_back(point.first); // timestamp
-			ys.push_back(point.second); // value
+
+			//add necessary offset and scaling to the data point before plotting
+			auto value = point.second;
+			value = postProcessor_->processData(value);
+			//std::cout << "Processed value for sensor " << sensorName << ": " << value << std::endl; // Debug output
+			//ys.push_back(point.second); // value
+			ys.push_back(value); // value
 		}
 
 		mpFXYVector* layer = new mpFXYVector(wxString(sensorName));

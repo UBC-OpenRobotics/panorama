@@ -155,12 +155,14 @@ public:
         jsonWriter_ = std::make_shared<JsonWriter>(dataBuffer_, runtimeDir);
         jsonWriterThread_ = std::make_unique<std::thread>(&JsonWriter::start, jsonWriter_);
 
+        auto postProcessor = std::make_shared<PostProcessing>();
+
         // --- Create CommandProcessor on a separate thread---
-        cmdProcessor_ = std::make_shared<CommandProcessor>(dataBuffer_);
+        cmdProcessor_ = std::make_shared<CommandProcessor>(dataBuffer_, postProcessor);
         cmdThread_ = std::make_unique<std::thread>(&CommandProcessor::start, cmdProcessor_);
 
         // --- Create view ---
-        MainFrame* w = new MainFrame("Panorama Client", model_, dataBuffer_);
+        MainFrame* w = new MainFrame("Panorama Client", model_, dataBuffer_, postProcessor);
         w->Show();
 
  
@@ -183,20 +185,18 @@ public:
             tcpClient_->stop();
         }
 
+        //clean shutdown of command processor
         if (cmdProcessor_) {
             cmdProcessor_->stop();
         }
-
         if (cmdThread_ && cmdThread_->joinable()) {
             cmdThread_->join();
         }
-
 
         // Clean shutdown of JSON writer
         if (jsonWriter_) {
             jsonWriter_->stop();
         }
-
         if (jsonWriterThread_ && jsonWriterThread_->joinable()) {
             jsonWriterThread_->join();
         }

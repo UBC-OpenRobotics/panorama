@@ -10,12 +10,14 @@
 #include <wx/socket.h>
 #include <vector>
 #include <memory>
+#include <atomic>
 #include <map>
 #include <atomic>
 #include "client/sensor_data_panel.h"
 #include "client/sensor_manager.hpp"
 #include "client/sensor.hpp"
 #include "client/graph_panel.hpp"
+#include "client/post_processing.hpp"
 #include <set>
 
 
@@ -41,7 +43,7 @@ public:
     };
 
     MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
-        std::shared_ptr<DataBuffer> dataBuffer,
+        std::shared_ptr<DataBuffer> dataBuffer, std::shared_ptr<PostProcessing> postProcessor,
         const wxPoint& pos = wxDefaultPosition,
         const wxSize& size = wxSize(1200, 800));
 
@@ -78,6 +80,8 @@ private:
     size_t displayedBufferCount_ = 0;
 
     void OnUpdateTimer(wxTimerEvent& event);
+
+    std::shared_ptr<PostProcessing> postProcessor_;
 
 
 };
