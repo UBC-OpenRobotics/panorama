@@ -95,8 +95,22 @@ void TcpClient::run() {
             // Parse JSON and write to DataBuffer
             buffer_data_t parsedData = reader.exportToBuffer(received);
             dataBuffer_->writeData(parsedData);
-            model_->addMessage("Data" + std::to_string(dataBuffer_->size()));
+            //model_->addMessage("Data" + std::to_string(dataBuffer_->size()));
             model_->addMessage("Received: " + received);
+            #ifdef BENCHMARK
+            // track data????
+            dataCount_++;
+            if (std::difftime(std::time(nullptr), prevRefresh_) >= 1) {
+                // AT 1 - set to 0
+                dataPerSecond_ = dataCount_ / std::difftime(std::time(nullptr), prevRefresh_);
+                dataCount_ = 0;
+                prevRefresh_ = std::time(nullptr);
+                std::cout << ("Data per second: " + std::to_string(dataPerSecond_) + "\n");
+            }
+        
+
+            #endif
+
         }
     }
 }

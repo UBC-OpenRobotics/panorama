@@ -12,6 +12,7 @@
 #include "client/json_reader.hpp"
 #include "client/config_manager.hpp"
 #include "client/data_logger.hpp"
+#include "client/command_processor.hpp"
 #include "client/json_writer.hpp"
 #include <iostream>
 using namespace std;
@@ -134,6 +135,7 @@ public:
 
         // --- Create DataBuffer ---
         dataBuffer_ = std::make_shared<DataBuffer>(runtimeDir + "/data");
+        
 
         // --- Create and start TCP client on separate thread ---
         std::string tcpHost;
@@ -161,9 +163,19 @@ public:
             return true;
         }
 
+        // // For running while tracking bitrate
+        // if (parser.isBitrateMode()) {
+        //     cout << "Tracking bitrate information\n";
+        //     tcpClient_->setTrackBitrate(true);
+        // }
+
         // --- Create and start JSON writer on separate thread ---
         jsonWriter_ = std::make_shared<JsonWriter>(dataBuffer_, runtimeDir);
         jsonWriterThread_ = std::make_unique<std::thread>(&JsonWriter::start, jsonWriter_);
+
+        // --- Create CommandProcessor on a separate thread---
+        cmdProcessor_ = std::make_shared<CommandProcessor>(dataBuffer_);
+        cmdThread_ = std::make_unique<std::thread>(&CommandProcessor::start, cmdProcessor_);
 
         // --- Create view ---
         MainFrame* w = new MainFrame("Panorama Client", model_, dataBuffer_, tcpClient_.get());
@@ -198,6 +210,15 @@ public:
             jsonWriterThread_->join();
         }
 
+
+        if (cmdProcessor_) {
+            cmdProcessor_->stop();
+        }
+
+        if (cmdThread_ && cmdThread_->joinable()) {
+            cmdThread_->join();
+        }
+
         return wxApp::OnExit();
     }
 
@@ -208,6 +229,8 @@ private:
     std::unique_ptr<TcpClient> tcpClient_;
     std::shared_ptr<JsonWriter> jsonWriter_;
     std::unique_ptr<std::thread> jsonWriterThread_;
+    std::shared_ptr<CommandProcessor> cmdProcessor_;
+    std::unique_ptr<std::thread> cmdThread_;
 };
 
 wxIMPLEMENT_APP(PanoramaClient);

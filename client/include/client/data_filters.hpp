@@ -1,15 +1,21 @@
 #pragma once
 
 #include <iostream>
-#include <list>
+#include <vector>
+#include <deque>
 
 class DataFilters {
 public:
     DataFilters();
 
-    int kalmanFilter(int input);
+    int KalmanFilter(double input);
+    double MovingAverageFilter(double input);
 
 private:
-    std::list<int> kalmanList;
-    int MAX_KALMAN_SIZE;
+    size_t MAX_KALMAN_SIZE = 10;    
+    std::vector<double> kalmanList; 
+
+    size_t MAX_MOVINGAVERAGE = 10;
+    std::deque<double> movingAverageList;
+   
 };
