@@ -16,10 +16,10 @@
 #include <functional>
 
 MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
-    std::shared_ptr<DataBuffer> dataBuffer,
+    std::shared_ptr<DataBuffer> dataBuffer, std::shared_ptr<PostProcessing> postProcessor,
     TcpClient* tcpClient,
     const wxPoint& pos, const wxSize& size)
-    : wxFrame(nullptr, wxID_ANY, title, pos, size), model_(model), dataBuffer_(dataBuffer), tcpClient_(tcpClient) {
+    : wxFrame(nullptr, wxID_ANY, title, pos, size), model_(model), dataBuffer_(dataBuffer), postProcessor_(postProcessor), tcpClient_(tcpClient) {
 
     CreateMenuBar();
 
@@ -83,7 +83,7 @@ MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
 
 
     // Graph panel area
-    graphPanel_ = new GraphPanel(rightSplitter);
+    graphPanel_ = new GraphPanel(rightSplitter, postProcessor_);
 
     // Create text control for displaying messages (Console)
     consolePanel_ = new wxPanel(mainSplitter);
@@ -158,6 +158,17 @@ void MainFrame::updateMessageDisplay() {
     for (size_t i = displayedMessageCount_; i < messages.size(); ++i) {
         messageDisplay_->AppendText(wxString::FromUTF8(messages[i].c_str()) + "\n");
     }
+
+    //print dataBuffer contents
+    /*
+    if (dataBuffer_->size() > 0) {
+        //std::cout << dataBuffer_->toStringAll();
+        text += "\n--- DataBuffer Contents ---\n";
+        text += wxString::FromUTF8(dataBuffer_->toStringAll());
+        text += "--- End of DataBuffer ---\n";
+    }
+    */
+
     displayedMessageCount_ = messages.size();
 
     // Append only new buffer entries
@@ -169,6 +180,8 @@ void MainFrame::updateMessageDisplay() {
         }
         ++i;
     }
+    
+
     displayedBufferCount_ = allBuffer.size();
 }
 
@@ -211,6 +224,16 @@ void MainFrame::updateDataPanel() {
             graphPanel_->SetVisibleSensors(visible);
             //std::cout << "Updated " << latestData.datatype << " with value: " << latestData.data << " " << latestData.dataunit << std::endl;
             
+            if (graphPanel_) {
+                graphPanel_->wxCallAfter(
+                    &GraphPanel::AddDataPoint,
+                    latestData.datatype,
+                    (double)latestData.data,
+                    (double)latestData.timestamp
+                );
+            }
+            
+            /*
             if(graphPanel_){
                 graphPanel_->AddDataPoint(
                     latestData.datatype,
@@ -218,6 +241,7 @@ void MainFrame::updateDataPanel() {
                     (double)latestData.timestamp
                 );
             }
+            */
         }
     }
 }
