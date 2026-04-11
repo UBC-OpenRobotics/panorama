@@ -92,11 +92,11 @@ void TcpClient::run() {
                 logger_->logJsonData(received);
             }
 
-            // Parse JSON and write to DataBuffer
-            buffer_data_t parsedData = reader.exportToBuffer(received);
-            dataBuffer_->writeData(parsedData);
-            model_->addMessage("Data" + std::to_string(dataBuffer_->size()));
-            model_->addMessage("Received: " + received);
+            // Parse all JSON objects in this TCP chunk and write to DataBuffer
+            std::vector<buffer_data_t> parsedItems = reader.exportAllToBuffer(received);
+            for (auto& item : parsedItems) {
+                dataBuffer_->writeData(std::move(item));
+            }
         }
     }
 }

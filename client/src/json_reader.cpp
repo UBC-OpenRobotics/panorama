@@ -43,7 +43,6 @@ buffer_data_t JsonReader::exportToBuffer(std::string json) {
     
     rapidjson::Document doc;
     rapidjson::ParseResult ok = doc.Parse(json.c_str());
-    std::cout << json.c_str() << std::endl;
     if (!ok) {
         std::cerr << "JSON parse error at offset " << ok.Offset()
                   << ": " << rapidjson::GetParseError_En(ok.Code()) << std::endl;
@@ -101,12 +100,35 @@ buffer_data_t JsonReader::exportToBuffer(std::string json) {
         ret.timestamp = (long) doc["timestamp"].GetInt();
     }
 
-    
-    
-    
-    
     //ret.timestamp = std::time(nullptr);
 
     return ret;
 
+}
+
+std::vector<buffer_data_t> JsonReader::exportAllToBuffer(const std::string& chunk) {
+    std::vector<buffer_data_t> results;
+
+    // Append new data to any leftover partial data from last recv()
+    recvBuffer_ += chunk;
+
+    // Split on newline delimiters (the JSON the server sends is newline delimited)
+    size_t pos = 0;
+    size_t newlinePos;
+    while ((newlinePos = recvBuffer_.find('\n', pos)) != std::string::npos) {
+        std::string line = recvBuffer_.substr(pos, newlinePos - pos);
+        pos = newlinePos + 1;
+
+        if (line.empty()) continue;
+
+        buffer_data_t parsed = exportToBuffer(line);
+        if (!parsed.datatype.empty()) {
+            results.push_back(std::move(parsed));
+        }
+    }
+
+    // Keep any remaining partial data for next call
+    recvBuffer_ = recvBuffer_.substr(pos);
+
+    return results;
 }

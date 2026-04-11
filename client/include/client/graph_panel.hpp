@@ -10,8 +10,9 @@ class GraphPanel : public wxPanel {
 public:
     GraphPanel(wxWindow* parent);
 
-    void AddDataPoint(const std::string& sensorName, double value, double timestamp);
-    void SetVisibleSensors(const std::set<std::string>& visisble);
+    void AddDataPoint(const std::string& sensorName, double value, double timestamp, bool refresh = true);
+    void SetVisibleSensors(const std::set<std::string>& visible, bool refresh = true);
+    void UpdateGraph();
 
 private:
     mpWindow* m_plot;
@@ -27,7 +28,5 @@ private:
     void DrawBackground(wxDC& dc);
     void DrawGrid(wxDC& dc);
     void DrawAxes(wxDC& dc);
-    void UpdateGraph();
-
     wxDECLARE_EVENT_TABLE();
 };

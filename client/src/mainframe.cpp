@@ -190,12 +190,15 @@ void MainFrame::updateDataPanel() {
 
 
     if (dataBuffer_->size() > 0) {
-        for (buffer_data_t latestData : dataBuffer_->consume()) {
 
-            // Skip entries with no data-type (first sensor reading)
+        auto batch = dataBuffer_->consume();
+
+        for (buffer_data_t& latestData : batch) {
+
+            // Skip entries with no data-type (first sensor/ corrupt reading)
             if (latestData.datatype.empty()) continue;
 
-            // Add Sensors to sensor manager and data grid only when they are first seen
+            // Add Sensors to sensor manager and data grid ONLY when they are first seen
             if (registeredSensors_.find(latestData.datatype) == registeredSensors_.end()) {
                 auto sensor = std::make_shared<Sensor>(latestData.datatype, latestData.dataunit);
                 sensorManager_->AddSensor(sensor);
@@ -203,21 +206,26 @@ void MainFrame::updateDataPanel() {
                 registeredSensors_.insert(latestData.datatype);
             }
 
-            sensorDataGrid->UpdateReading(latestData.datatype, (double)latestData.data, latestData.dataunit);
-            
+            sensorDataGrid->UpdateReading(latestData.datatype, (double)latestData.data, latestData.dataunit, false);
 
-            auto enabledNames = sensorManager_->GetEnabledSensorNames();
-            std::set<std::string> visible(enabledNames.begin(), enabledNames.end());
-            graphPanel_->SetVisibleSensors(visible);
-            //std::cout << "Updated " << latestData.datatype << " with value: " << latestData.data << " " << latestData.dataunit << std::endl;
-            
-            if(graphPanel_){
+            if (graphPanel_) {
                 graphPanel_->AddDataPoint(
                     latestData.datatype,
                     (double)latestData.data,
-                    (double)latestData.timestamp
+                    (double)latestData.timestamp,
+                    false
                 );
             }
+        }
+
+        // Do a SINGLE refresh after the ENTIRE batch is processed
+        sensorDataGrid->RefreshGrid();
+
+        if (graphPanel_) {
+            auto enabledNames = sensorManager_->GetEnabledSensorNames();
+            std::set<std::string> visible(enabledNames.begin(), enabledNames.end());
+            graphPanel_->SetVisibleSensors(visible, false);
+            graphPanel_->UpdateGraph();
         }
     }
 }
@@ -331,10 +339,13 @@ void MainFrame::OnStopStream(wxCommandEvent& event) {
 }
 
 void MainFrame::OnUpdateTimer(wxTimerEvent&) {
-    if (updatePending_.exchange(false)) {
-        updateMessageDisplay();
-        updateDataPanel();
-    }
+    // if (updatePending_.exchange(false)) {
+    // }
+    // updateMessageDisplay(); // NOT NEEDED TO PRINT ENTIRE BUFFER CONTENT
+    // TODO: Create ConsoleMessageBuffer that keeps track of this, have method to append to that buffer instead.
+
+    // Data panel polls the buffer independently of the message model
+    updateDataPanel();
 
     // Makesure the esp is actually detected
     if (esp32BannerPending_.exchange(false)) {

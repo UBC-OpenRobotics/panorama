@@ -129,15 +129,18 @@ void GraphPanel::DrawAxes(wxDC& dc){
 
 }
 
-void GraphPanel::AddDataPoint(const std::string& sensorName, double value, double timestamp){
+void GraphPanel::AddDataPoint(const std::string& sensorName, double value, double timestamp, bool refresh){
 	sensorData_[sensorName].push_back({timestamp, value});
 
 	// Keeps the first 100 data points
 	if (sensorData_[sensorName].size() > 100) {
 		sensorData_[sensorName].erase(sensorData_[sensorName].begin());
 	}
-	UpdateGraph();
-} 
+
+	if (refresh) {
+		UpdateGraph();
+	}
+}
 
 void GraphPanel::UpdateGraph(){
 	for (auto& pair : sensorLayers_){
@@ -188,7 +191,9 @@ void GraphPanel::UpdateGraph(){
 	m_plot->Update();
 }
 
-void GraphPanel::SetVisibleSensors(const std::set<std::string>& visible) {
-	visibleSensors_ = visible; 
-	UpdateGraph();
+void GraphPanel::SetVisibleSensors(const std::set<std::string>& visible, bool refresh) {
+	visibleSensors_ = visible;
+	if (refresh) {
+		UpdateGraph();
+	}
 }

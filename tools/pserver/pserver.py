@@ -5,6 +5,7 @@ import threading
 from putils import *
 from pstreamer import PStreamer
 from pstream_json import PStreamJSON
+from pserver_config import *
 
 class PServer:
     def __init__(self):
@@ -86,8 +87,8 @@ class PServer:
             client_socket.close()
 
 def main():
-    host = '127.0.0.1'
-    port = 3000
+    host = PSERVER_HOST_ADDRESS
+    port = PSERVER_PORT_NUMBER
 
     if len(sys.argv) > 1:
         port = int(sys.argv[1])
@@ -95,7 +96,7 @@ def main():
     server = PServer()
 
     streamer = PStreamer()
-    streamer.build_stream(PStreamJSON()).set_interval(0.4)
+    streamer.build_stream(PStreamJSON()).set_interval(PSTREAMER_REFRESH_PERIOD)
 
     streamer.start()
 
