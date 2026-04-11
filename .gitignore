@@ -51,3 +51,7 @@ firmware/panorama/.cache/
 
 # Runtime directory
 rundir/
+
+
+# Firmware related:
+firmware/panorama/.cache/

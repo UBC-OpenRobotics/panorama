@@ -175,9 +175,7 @@ void GraphPanel::UpdateGraph(){
 			//add necessary offset and scaling to the data point before plotting
 			auto value = point.second;
 			value = postProcessor_->processData(value);
-			//std::cout << "Processed value for sensor " << sensorName << ": " << value << std::endl; // Debug output
-			//ys.push_back(point.second); // value
-			ys.push_back(value); // value
+			ys.push_back(value);
 		}
 
 		mpFXYVector* layer = new mpFXYVector(wxString(sensorName));

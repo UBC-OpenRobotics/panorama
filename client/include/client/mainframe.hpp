@@ -11,6 +11,7 @@
 #include <vector>
 #include <memory>
 #include <atomic>
+#include <atomic>
 #include <map>
 #include <atomic>
 #include "client/sensor_data_panel.h"
@@ -18,10 +19,13 @@
 #include "client/sensor.hpp"
 #include "client/graph_panel.hpp"
 #include "client/post_processing.hpp"
+#include "client/post_processing.hpp"
 #include <set>
 
 class MessageModel;
 class DataBuffer;
+class TcpClient;
+class Esp32Scanner;
 class TcpClient;
 class Esp32Scanner;
 class SensorDataManager;
@@ -38,6 +42,12 @@ public:
         ID_EDIT_PREFERENCES,
         ID_VIEW_CONSOLE,
         ID_VIEW_FULLSCREEN,
+        ID_SETTINGS_OPEN,
+        ID_BTN_START,
+        ID_BTN_STOP,
+        ID_ESP32_AUTOSTART,
+        ID_ESP32_CONNECT,
+        ID_ESP32_DISMISS
         ID_SETTINGS_OPEN,
         ID_BTN_START,
         ID_BTN_STOP,
@@ -93,14 +103,14 @@ private:
 
     void OnUpdateTimer(wxTimerEvent& event);
 
+    std::shared_ptr<PostProcessing> postProcessor_;
+
     // Auto detecting ESP32s
     std::unique_ptr<Esp32Scanner> esp32Scanner_;
     wxPanel* esp32Banner_ = nullptr;
     wxBoxSizer* mainSizer_ = nullptr;
     std::atomic<bool> esp32BannerPending_{false};
-    bool esp32BannerVisible_ = false;    std::shared_ptr<PostProcessing> postProcessor_;
-
-
+    bool esp32BannerVisible_ = false;
 };
 
 #endif // __MAINFRAME__

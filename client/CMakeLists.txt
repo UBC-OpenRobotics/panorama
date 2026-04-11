@@ -8,12 +8,6 @@ file(GLOB CLIENT_HEADERS CONFIGURE_DEPENDS include/client/*.hpp include/client/*
 set(WXMATHPLOT_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(external/wxMathPlot_0.2.0/mathplot)
 
-option(BENCHMARK "ENABLE" OFF)
-
-if (BENCHMARK)
-    add_compile_definitions(BENCHMARK)
-endif()
-
 # Executable settings
 if(APPLE)
     add_executable(panorama-client MACOSX_BUNDLE ${CLIENT_SOURCES} ${COMMON_HEADERS} ${CLIENT_HEADERS})
