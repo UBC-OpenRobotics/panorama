@@ -48,12 +48,6 @@ public:
         ID_ESP32_AUTOSTART,
         ID_ESP32_CONNECT,
         ID_ESP32_DISMISS
-        ID_SETTINGS_OPEN,
-        ID_BTN_START,
-        ID_BTN_STOP,
-        ID_ESP32_AUTOSTART,
-        ID_ESP32_CONNECT,
-        ID_ESP32_DISMISS
     };
 
     MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,

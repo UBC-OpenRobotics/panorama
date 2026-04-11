@@ -204,7 +204,7 @@ public:
             tcpClient_->stop();
         }
 
-        //clean shutdown of command processor
+        //Clean shutdown of command processor
         if (cmdProcessor_) {
             cmdProcessor_->stop();
         }
@@ -218,15 +218,6 @@ public:
         }
         if (jsonWriterThread_ && jsonWriterThread_->joinable()) {
             jsonWriterThread_->join();
-        }
-
-        // Clean shutdown of command processor
-        if (cmdProcessor_) {
-            cmdProcessor_->stop();
-        }
-
-        if (cmdThread_ && cmdThread_->joinable()) {
-            cmdThread_->join();
         }
 
         return wxApp::OnExit();
