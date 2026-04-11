@@ -31,5 +31,7 @@ private:
     void DrawAxes(wxDC& dc);
     void UpdateGraph();
 
+    wxDECLARE_EVENT_TABLE();
+    
     std::shared_ptr<PostProcessing> postProcessor_;
 };

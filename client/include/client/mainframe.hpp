@@ -93,6 +93,8 @@ private:
 
     void OnUpdateTimer(wxTimerEvent& event);
 
+    std::shared_ptr<PostProcessing> postProcessor_;
+
     // Auto detecting ESP32s
     std::unique_ptr<Esp32Scanner> esp32Scanner_;
     wxPanel* esp32Banner_ = nullptr;

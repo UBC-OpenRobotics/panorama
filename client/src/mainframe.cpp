@@ -19,7 +19,7 @@ MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
     std::shared_ptr<DataBuffer> dataBuffer, std::shared_ptr<PostProcessing> postProcessor,
     TcpClient* tcpClient,
     const wxPoint& pos, const wxSize& size)
-    : wxFrame(nullptr, wxID_ANY, title, pos, size), model_(model), dataBuffer_(dataBuffer), tcpClient_(tcpClient), postProcessor_(postProcessor) {
+    : wxFrame(nullptr, wxID_ANY, title, pos, size), model_(model), dataBuffer_(dataBuffer), postProcessor_(postProcessor), tcpClient_(tcpClient) {
 
     CreateMenuBar();
 

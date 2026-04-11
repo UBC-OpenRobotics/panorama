@@ -14,6 +14,7 @@
 #include "client/data_logger.hpp"
 #include "client/command_processor.hpp"
 #include "client/json_writer.hpp"
+#include "client/command_processor.hpp"
 #include <iostream>
 using namespace std;
 
@@ -142,10 +143,7 @@ public:
         int tcpPort;
         bool autoReconnect;
         int reconnectDelay;
-        if (parser.isNoEspMode()) {
-            tcpHost = "127.0.0.1";
-            tcpPort = 3000;
-        } else if (!config.getTcpSettings(tcpHost, tcpPort, autoReconnect, reconnectDelay)) {
+        if (!config.getTcpSettings(tcpHost, tcpPort, autoReconnect, reconnectDelay)) {
             tcpHost = "127.0.0.1";
             tcpPort = 3000;
         }
@@ -181,7 +179,7 @@ public:
         cmdThread_ = std::make_unique<std::thread>(&CommandProcessor::start, cmdProcessor_);
 
         // --- Create view ---
-        MainFrame* w = new MainFrame("Panorama Client", model_, dataBuffer_, tcpClient_.get(), postProcessor);
+        MainFrame* w = new MainFrame("Panorama Client", model_, dataBuffer_, postProcessor, tcpClient_.get());
         w->Show();
 
  
@@ -204,7 +202,7 @@ public:
             tcpClient_->stop();
         }
 
-        //clean shutdown of command processor
+        //Clean shutdown of command processor
         if (cmdProcessor_) {
             cmdProcessor_->stop();
         }
