@@ -220,7 +220,7 @@ public:
             jsonWriterThread_->join();
         }
 
-
+        // Clean shutdown of command processor
         if (cmdProcessor_) {
             cmdProcessor_->stop();
         }
@@ -237,8 +237,6 @@ private:
     std::shared_ptr<DataLogger> dataLogger_;
     std::shared_ptr<DataBuffer> dataBuffer_;
     std::unique_ptr<TcpClient> tcpClient_;
-    std::shared_ptr<CommandProcessor> cmdProcessor_;
-    std::unique_ptr<std::thread> cmdThread_;
     std::shared_ptr<JsonWriter> jsonWriter_;
     std::unique_ptr<std::thread> jsonWriterThread_;
     std::shared_ptr<CommandProcessor> cmdProcessor_;
