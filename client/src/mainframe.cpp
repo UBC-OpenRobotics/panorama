@@ -18,9 +18,7 @@
 MainFrame::MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
     std::shared_ptr<DataBuffer> dataBuffer, std::shared_ptr<PostProcessing> postProcessor,
     TcpClient* tcpClient,
-    TcpClient* tcpClient,
     const wxPoint& pos, const wxSize& size)
-    : wxFrame(nullptr, wxID_ANY, title, pos, size), model_(model), dataBuffer_(dataBuffer), postProcessor_(postProcessor), tcpClient_(tcpClient) {
     : wxFrame(nullptr, wxID_ANY, title, pos, size), model_(model), dataBuffer_(dataBuffer), postProcessor_(postProcessor), tcpClient_(tcpClient) {
 
     CreateMenuBar();
@@ -336,10 +334,15 @@ void MainFrame::OnSettingsOpen(wxCommandEvent& event) {
     }
 }
 
-void MainFrame::OnUpdateTimer(wxTimerEvent&) {
-    if (updatePending_.exchange(false)) {
-        updateMessageDisplay();
-        updateDataPanel();
+void MainFrame::OnStartStream(wxCommandEvent& event) {
+    if (tcpClient_) {
+        tcpClient_->sendCommand("START");
+    }
+}
+
+void MainFrame::OnStopStream(wxCommandEvent& event) {
+    if (tcpClient_) {
+        tcpClient_->sendCommand("STOP");
     }
 }
 

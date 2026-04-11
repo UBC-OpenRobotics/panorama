@@ -137,11 +137,6 @@ public:
         dataBuffer_ = std::make_shared<DataBuffer>(runtimeDir + "/data");
         
 
-        // --- Create CommandProcessor on a separate thread---
-        cmdProcessor_ = std::make_shared<CommandProcessor>(dataBuffer_);
-        cmdThread_ = std::make_unique<std::thread>(&CommandProcessor::start, cmdProcessor_);
-        
-
         // --- Create and start TCP client on separate thread ---
         std::string tcpHost;
         int tcpPort;
@@ -164,10 +159,6 @@ public:
             }
             return true;
         }
-
-        // --- Create CommandProcessor on a separate thread---
-        cmdProcessor_ = std::make_shared<CommandProcessor>(dataBuffer_);
-        cmdThread_ = std::make_unique<std::thread>(&CommandProcessor::start, cmdProcessor_);
 
         // --- Create and start JSON writer on separate thread ---
         jsonWriter_ = std::make_shared<JsonWriter>(dataBuffer_, runtimeDir);
@@ -204,7 +195,7 @@ public:
             tcpClient_->stop();
         }
 
-        //clean shutdown of command processor
+        //Clean shutdown of command processor
         if (cmdProcessor_) {
             cmdProcessor_->stop();
         }
@@ -218,15 +209,6 @@ public:
         }
         if (jsonWriterThread_ && jsonWriterThread_->joinable()) {
             jsonWriterThread_->join();
-        }
-
-        // Clean shutdown of command processor
-        if (cmdProcessor_) {
-            cmdProcessor_->stop();
-        }
-
-        if (cmdThread_ && cmdThread_->joinable()) {
-            cmdThread_->join();
         }
 
         return wxApp::OnExit();
