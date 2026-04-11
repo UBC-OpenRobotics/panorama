@@ -33,10 +33,20 @@ private:
     std::atomic<bool> running_;
     std::thread clientThread_;
 
+    
+
 #ifdef _WIN32
     unsigned long long socket_; // SOCKET type on Windows
 #else
     int socket_;
+#endif
+
+#ifdef BENCHMARK
+    // track bitrate
+    std::time_t prevRefresh_ = std::time(nullptr);
+    double dataPerSecond_ = 0.0;
+    int dataCount_ = 0;
+    
 #endif
 };
 

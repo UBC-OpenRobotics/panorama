@@ -5,10 +5,12 @@
 #include <vector> 
 #include <set>
 #include <string>
+#include <memory>
+#include "client/post_processing.hpp"
 
 class GraphPanel : public wxPanel {
 public:
-    GraphPanel(wxWindow* parent);
+    GraphPanel(wxWindow* parent, std::shared_ptr<PostProcessing> postProcessor);
 
     void AddDataPoint(const std::string& sensorName, double value, double timestamp);
     void SetVisibleSensors(const std::set<std::string>& visisble);
@@ -30,4 +32,6 @@ private:
     void UpdateGraph();
 
     wxDECLARE_EVENT_TABLE();
+    
+    std::shared_ptr<PostProcessing> postProcessor_;
 };

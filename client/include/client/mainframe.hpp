@@ -10,12 +10,14 @@
 #include <wx/socket.h>
 #include <vector>
 #include <memory>
+#include <atomic>
 #include <map>
 #include <atomic>
 #include "client/sensor_data_panel.h"
 #include "client/sensor_manager.hpp"
 #include "client/sensor.hpp"
 #include "client/graph_panel.hpp"
+#include "client/post_processing.hpp"
 #include <set>
 
 class MessageModel;
@@ -45,7 +47,7 @@ public:
     };
 
     MainFrame(const wxString& title, std::shared_ptr<MessageModel> model,
-        std::shared_ptr<DataBuffer> dataBuffer,
+        std::shared_ptr<DataBuffer> dataBuffer, std::shared_ptr<PostProcessing> postProcessor,
         TcpClient* tcpClient,
         const wxPoint& pos = wxDefaultPosition,
         const wxSize& size = wxSize(1200, 800));
@@ -91,12 +93,16 @@ private:
 
     void OnUpdateTimer(wxTimerEvent& event);
 
+    std::shared_ptr<PostProcessing> postProcessor_;
+
     // Auto detecting ESP32s
     std::unique_ptr<Esp32Scanner> esp32Scanner_;
     wxPanel* esp32Banner_ = nullptr;
     wxBoxSizer* mainSizer_ = nullptr;
     std::atomic<bool> esp32BannerPending_{false};
-    bool esp32BannerVisible_ = false;
+    bool esp32BannerVisible_ = false;    
+
+
 };
 
 #endif // __MAINFRAME__

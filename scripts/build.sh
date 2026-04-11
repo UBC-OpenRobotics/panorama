@@ -2,14 +2,15 @@
 
 BUILD_TYPE=${1:-Debug}
 
+USE_BENCHMARK=${2:-OFF}
+
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
 ROOT_DIR=$(realpath "$SCRIPT_DIR/..")
 
 BUILD_DIR="$ROOT_DIR/build"
-
 echo "build.sh: [INFO] Configuring project ($BUILD_TYPE)..."
 
-cmake -B "$BUILD_DIR" -S "$ROOT_DIR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+cmake -B "$BUILD_DIR" -S "$ROOT_DIR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBENCHMARK=$USE_BENCHMARK
 
 echo "build.sh: [INFO] Building project..."
 cmake --build "$BUILD_DIR" --parallel

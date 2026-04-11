@@ -12,6 +12,7 @@ TOOLS_DIR="$ROOT_DIR/tools"
 
 NOESP=false
 NOGUI=false
+BITRATE=false
 TARGET="panorama-client"
 
 for arg in "$@"; do
@@ -24,6 +25,9 @@ for arg in "$@"; do
             ;;
         -nogui)
             NOGUI=true
+            ;;
+        -bitrate)
+            BITRATE=true
             ;;
         -*)
             echo "run.sh: [ERROR] Unknown flag: $arg"
@@ -83,6 +87,12 @@ if [[ "$NOESP" == true ]]; then
 fi
 if [[ "$NOGUI" == true ]]; then
     CMD="$CMD --nogui"
+fi
+if [[ "$BITRATE" == true ]]; then
+   # CMD="$CMD --bitrate"
+   # bash "$BUILD_SCRIPT" Release ON
+   echo "run.sh: Bitrate mode enabled, rebuilding"
+   bash "$BUILD_SCRIPT" Release ON
 fi
 
 echo "run.sh: [INFO] Running $TARGET..."

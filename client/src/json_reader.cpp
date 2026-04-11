@@ -43,7 +43,7 @@ buffer_data_t JsonReader::exportToBuffer(std::string json) {
     
     rapidjson::Document doc;
     rapidjson::ParseResult ok = doc.Parse(json.c_str());
-    std::cout << json.c_str() << std::endl;
+    //std::cout << json.c_str() << std::endl;
     if (!ok) {
         std::cerr << "JSON parse error at offset " << ok.Offset()
                   << ": " << rapidjson::GetParseError_En(ok.Code()) << std::endl;
@@ -101,10 +101,6 @@ buffer_data_t JsonReader::exportToBuffer(std::string json) {
         ret.timestamp = (long) doc["timestamp"].GetInt();
     }
 
-    
-    
-    
-    
     //ret.timestamp = std::time(nullptr);
 
     return ret;

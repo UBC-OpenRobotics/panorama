@@ -12,7 +12,9 @@
 #include "client/json_reader.hpp"
 #include "client/config_manager.hpp"
 #include "client/data_logger.hpp"
+#include "client/command_processor.hpp"
 #include "client/json_writer.hpp"
+#include "client/command_processor.hpp"
 #include <iostream>
 using namespace std;
 
@@ -134,16 +136,14 @@ public:
 
         // --- Create DataBuffer ---
         dataBuffer_ = std::make_shared<DataBuffer>(runtimeDir + "/data");
+        
 
         // --- Create and start TCP client on separate thread ---
         std::string tcpHost;
         int tcpPort;
         bool autoReconnect;
         int reconnectDelay;
-        if (parser.isNoEspMode()) {
-            tcpHost = "127.0.0.1";
-            tcpPort = 3000;
-        } else if (!config.getTcpSettings(tcpHost, tcpPort, autoReconnect, reconnectDelay)) {
+        if (!config.getTcpSettings(tcpHost, tcpPort, autoReconnect, reconnectDelay)) {
             tcpHost = "127.0.0.1";
             tcpPort = 3000;
         }
@@ -161,12 +161,25 @@ public:
             return true;
         }
 
+        // // For running while tracking bitrate
+        // if (parser.isBitrateMode()) {
+        //     cout << "Tracking bitrate information\n";
+        //     tcpClient_->setTrackBitrate(true);
+        // }
+
         // --- Create and start JSON writer on separate thread ---
         jsonWriter_ = std::make_shared<JsonWriter>(dataBuffer_, runtimeDir);
         jsonWriterThread_ = std::make_unique<std::thread>(&JsonWriter::start, jsonWriter_);
 
+        // --- Create PostProcessing as a shared pointer ---
+        auto postProcessor = std::make_shared<PostProcessing>();
+
+        // --- Create CommandProcessor on a separate thread---
+        cmdProcessor_ = std::make_shared<CommandProcessor>(dataBuffer_, postProcessor);
+        cmdThread_ = std::make_unique<std::thread>(&CommandProcessor::start, cmdProcessor_);
+
         // --- Create view ---
-        MainFrame* w = new MainFrame("Panorama Client", model_, dataBuffer_, tcpClient_.get());
+        MainFrame* w = new MainFrame("Panorama Client", model_, dataBuffer_, postProcessor, tcpClient_.get());
         w->Show();
 
  
@@ -189,13 +202,29 @@ public:
             tcpClient_->stop();
         }
 
+        //Clean shutdown of command processor
+        if (cmdProcessor_) {
+            cmdProcessor_->stop();
+        }
+        if (cmdThread_ && cmdThread_->joinable()) {
+            cmdThread_->join();
+        }
+
         // Clean shutdown of JSON writer
         if (jsonWriter_) {
             jsonWriter_->stop();
         }
-
         if (jsonWriterThread_ && jsonWriterThread_->joinable()) {
             jsonWriterThread_->join();
+        }
+
+
+        if (cmdProcessor_) {
+            cmdProcessor_->stop();
+        }
+
+        if (cmdThread_ && cmdThread_->joinable()) {
+            cmdThread_->join();
         }
 
         return wxApp::OnExit();
@@ -208,6 +237,8 @@ private:
     std::unique_ptr<TcpClient> tcpClient_;
     std::shared_ptr<JsonWriter> jsonWriter_;
     std::unique_ptr<std::thread> jsonWriterThread_;
+    std::shared_ptr<CommandProcessor> cmdProcessor_;
+    std::unique_ptr<std::thread> cmdThread_;
 };
 
 wxIMPLEMENT_APP(PanoramaClient);

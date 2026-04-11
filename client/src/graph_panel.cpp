@@ -9,8 +9,8 @@ wxBEGIN_EVENT_TABLE(GraphPanel, wxPanel)
 	EVT_SIZE(GraphPanel::OnSize)
 wxEND_EVENT_TABLE()
 
-GraphPanel::GraphPanel(wxWindow* parent)
-	: wxPanel(parent, wxID_ANY) {
+GraphPanel::GraphPanel(wxWindow* parent, std::shared_ptr<PostProcessing> postProcessor)
+	: wxPanel(parent, wxID_ANY), postProcessor_(postProcessor) {
 	
 	m_plot = new mpWindow(this, wxID_ANY);
 	m_plot-> EnableDoubleBuffer(true);
@@ -144,7 +144,7 @@ void GraphPanel::UpdateGraph(){
 		m_plot->DelLayer(pair.second,true);
 	}
 	sensorLayers_.clear(); 
-
+	
 	// colours for the graph
 	wxColour colours[] = {
 		wxColour(255, 0, 0), 
@@ -167,7 +167,11 @@ void GraphPanel::UpdateGraph(){
 		std::vector<double> xs, ys;
 		for(const auto& point : data){
 			xs.push_back(point.first); // timestamp
-			ys.push_back(point.second); // value
+
+			//add necessary offset and scaling to the data point before plotting
+			auto value = point.second;
+			value = postProcessor_->processData(value);
+			ys.push_back(value);
 		}
 
 		mpFXYVector* layer = new mpFXYVector(wxString(sensorName));

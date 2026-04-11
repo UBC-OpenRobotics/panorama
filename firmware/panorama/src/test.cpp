@@ -9,6 +9,9 @@ const uint16_t PORT = 9000;
 // Onboard LED pin
 const int LED_PIN = 2;
 
+// Onboard LED pin
+const int LED_PIN = 2;
+
 // HC-SR04 pins (adjust to match your wiring)
 const int TRIG_PIN = 5;
 const int ECHO_PIN = 18;
@@ -128,13 +131,12 @@ void loop() {
 
       String json =
         "{"
-          "\"sensor\":\"" + String(s.sensor) + "\","
-          "\"dataunit\":\"" + String(s.dataunit) + "\","
-          "\"data\":" + String(value, 2) + ","
-          "\"datatype\":\"" + String(s.datatype) + "\","
-          "\"sensorID\":" + String(s.sensorID) + ","
+          "\"sensor\":\"" + String(SENSOR_NAME) + "\","
+          "\"unit\":\"cm\","
+          "\"value\":" + String(distanceCm, 2) + ","
+          "\"sensor_id\":" + String(SENSOR_ID) + ","
           "\"seq\":" + String(seq++) + ","
-          "\"timestamp\":" + String(timestamp) +
+          "\"timestamp_ms\":" + String(timestamp) +
         "}\n";
 
       client.print(json);
