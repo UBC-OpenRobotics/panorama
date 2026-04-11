@@ -100,7 +100,7 @@ private:
     wxPanel* esp32Banner_ = nullptr;
     wxBoxSizer* mainSizer_ = nullptr;
     std::atomic<bool> esp32BannerPending_{false};
-    bool esp32BannerVisible_ = false;    std::shared_ptr<PostProcessing> postProcessor_;
+    bool esp32BannerVisible_ = false;    
 
 
 };
